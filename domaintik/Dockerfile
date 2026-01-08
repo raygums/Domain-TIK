@@ -7,7 +7,10 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     zip \
     unzip \
-    curl
+    curl \
+    gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
 
 RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
 
