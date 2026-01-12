@@ -4,31 +4,20 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SubmissionController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
+
+// Public Routes
 Route::get('/', function () {
-    // Menggunakan view 'home' sesuai branch dev kamu
     return view('home');
 })->name('home');
 
-/*
-|--------------------------------------------------------------------------
-| Guest Routes (Hanya untuk yang BELUM Login)
-|--------------------------------------------------------------------------
-*/
+
+//Guest Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'index'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Authenticated Routes (Wajib Login)
-|--------------------------------------------------------------------------
-*/
+// Authenticated Routes
 Route::middleware('auth')->group(function () {
     
     // --- Authentication ---
@@ -39,7 +28,7 @@ Route::middleware('auth')->group(function () {
         return view('design.dashboard'); // Sesuaikan dengan lokasi file view dashboard kamu
     })->name('dashboard');
 
-    // --- Submission Routes (Fitur Pengajuan) ---
+    // --- Fitur Pengajuan ---
     // Group ini bisa diakses oleh User biasa
     Route::prefix('pengajuan')->name('submissions.')->group(function () {
         // Form & Store
