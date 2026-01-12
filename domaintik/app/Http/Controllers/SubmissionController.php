@@ -82,7 +82,7 @@ class SubmissionController extends Controller
             'admin_password' => 'required|string|min:6|max:8',
             
             // Hidden fields for DB compatibility
-            'unit_id' => 'nullable|exists:referensi.units,id',
+            'unit_id' => 'nullable',
             'application_name' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'request_type' => 'required|in:domain,hosting,vps',
