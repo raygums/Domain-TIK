@@ -26,15 +26,15 @@
                 {{-- Title --}}
                 <h1 class="mb-6 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
                     Selamat Datang di
-                    <span class="bg-gradient-unila bg-clip-text text-transparent">
-                        DomainTIK
+                    <span class="mb-6 text-4xl font-bold tracking-tight text-myunila sm:text-5xl lg:text-6xl">
+                        DomainTIK 
                     </span>
                 </h1>
                 
                 {{-- Description --}}
                 <p class="mx-auto mb-8 max-w-2xl text-lg text-gray-600 sm:text-xl">
-                    Platform digital untuk pengajuan layanan <strong>Domain (.unila.ac.id)</strong>, 
-                    <strong>Hosting</strong>, dan <strong>VPS</strong> bagi seluruh unit kerja di lingkungan 
+                    Platform digital untuk pengajuan layanan <strong>Domain (.unila.ac.id)</strong> dan 
+                    <strong>Hosting</strong> bagi seluruh unit kerja di lingkungan 
                     Universitas Lampung.
                 </p>
                 
@@ -118,7 +118,7 @@
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
-                            Ajukan Domain Baru
+                            Ajukan Layanan Domain 
                         </a>
                     @else
                         <button onclick="alert('Silakan login terlebih dahulu untuk mengajukan layanan.')" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gray-100 px-6 py-4 font-semibold text-gray-500 transition-all hover:bg-gray-200">
@@ -176,7 +176,7 @@
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
-                            Ajukan Hosting Baru
+                            Ajukan Layanan Hosting 
                         </a>
                     @else
                         <button onclick="alert('Silakan login terlebih dahulu untuk mengajukan layanan.')" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gray-100 px-6 py-4 font-semibold text-gray-500 transition-all hover:bg-gray-200">
@@ -201,49 +201,54 @@
                 </p>
             </div>
             
-            {{-- Steps --}}
-            <div class="grid gap-8 md:grid-cols-4">
-                {{-- Step 1 --}}
-                <div class="relative text-center">
-                    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-unila text-xl font-bold text-white shadow-lg shadow-myunila/30">
-                        1
+            {{-- Steps with connected line --}}
+            <div class="relative">
+                {{-- Horizontal Connector Line (behind circles) --}}
+                <div class="absolute left-0 right-0 top-7 hidden h-1 md:block">
+                    <div class="mx-auto flex max-w-3xl">
+                        <div class="h-full w-1/4 bg-myunila"></div>
+                        <div class="h-full w-1/4 bg-myunila-600"></div>
+                        <div class="h-full w-1/4 bg-myunila-700"></div>
+                        <div class="h-full w-1/4 bg-success"></div>
                     </div>
-                    <h3 class="mb-2 font-bold text-gray-900">Isi Formulir Online</h3>
-                    <p class="text-sm text-gray-600">Lengkapi data pemohon, unit kerja, atasan, dan detail teknis layanan yang dibutuhkan.</p>
-                    
-                    {{-- Connector Line --}}
-                    <div class="absolute right-0 top-7 hidden h-0.5 w-1/2 bg-linear-to-r from-myunila-300 to-myunila-400 md:block lg:w-full lg:-translate-x-1/2"></div>
                 </div>
                 
-                {{-- Step 2 --}}
-                <div class="relative text-center">
-                    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-myunila-600 text-xl font-bold text-white shadow-lg shadow-myunila/30">
-                        2
+                <div class="grid gap-8 md:grid-cols-4">
+                    {{-- Step 1 --}}
+                    <div class="relative text-center">
+                        <div class="relative z-10 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-unila text-xl font-bold text-white shadow-lg shadow-myunila/30 ring-4 ring-white">
+                            1
+                        </div>
+                        <h3 class="mb-2 font-bold text-gray-900">Isi Formulir Online</h3>
+                        <p class="text-sm text-gray-600">Lengkapi data pemohon, unit kerja, atasan, dan detail teknis layanan yang dibutuhkan.</p>
                     </div>
-                    <h3 class="mb-2 font-bold text-gray-900">Cetak & Tanda Tangan</h3>
-                    <p class="text-sm text-gray-600">Download PDF formulir, cetak, minta tanda tangan atasan (basah), lalu scan ulang.</p>
                     
-                    <div class="absolute right-0 top-7 hidden h-0.5 w-1/2 bg-linear-to-r from-myunila-400 to-myunila-500 md:block lg:w-full lg:-translate-x-1/2"></div>
-                </div>
-                
-                {{-- Step 3 --}}
-                <div class="relative text-center">
-                    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-myunila-700 text-xl font-bold text-white shadow-lg shadow-myunila/30">
-                        3
+                    {{-- Step 2 --}}
+                    <div class="relative text-center">
+                        <div class="relative z-10 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-myunila-600 text-xl font-bold text-white shadow-lg shadow-myunila/30 ring-4 ring-white">
+                            2
+                        </div>
+                        <h3 class="mb-2 font-bold text-gray-900">Cetak & Tanda Tangan</h3>
+                        <p class="text-sm text-gray-600">Download PDF formulir, cetak, minta tanda tangan atasan (basah), lalu scan ulang.</p>
                     </div>
-                    <h3 class="mb-2 font-bold text-gray-900">Upload & Submit</h3>
-                    <p class="text-sm text-gray-600">Upload scan formulir bertanda tangan beserta foto/scan identitas (KTM/Karpeg).</p>
                     
-                    <div class="absolute right-0 top-7 hidden h-0.5 w-1/2 bg-linear-to-r from-myunila-500 to-success md:block lg:w-full lg:-translate-x-1/2"></div>
-                </div>
-                
-                {{-- Step 4 --}}
-                <div class="text-center">
-                    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success text-xl font-bold text-white shadow-lg shadow-success/30">
-                        4
+                    {{-- Step 3 --}}
+                    <div class="relative text-center">
+                        <div class="relative z-10 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-myunila-700 text-xl font-bold text-white shadow-lg shadow-myunila/30 ring-4 ring-white">
+                            3
+                        </div>
+                        <h3 class="mb-2 font-bold text-gray-900">Upload & Submit</h3>
+                        <p class="text-sm text-gray-600">Upload scan formulir bertanda tangan beserta foto/scan identitas (KTM/Karpeg).</p>
                     </div>
-                    <h3 class="mb-2 font-bold text-gray-900">Layanan Aktif</h3>
-                    <p class="text-sm text-gray-600">Tim TIK memverifikasi dan memproses. Anda akan menerima notifikasi saat layanan aktif.</p>
+                    
+                    {{-- Step 4 --}}
+                    <div class="text-center">
+                        <div class="relative z-10 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success text-xl font-bold text-white shadow-lg shadow-success/30 ring-4 ring-white">
+                            4
+                        </div>
+                        <h3 class="mb-2 font-bold text-gray-900">Layanan Aktif</h3>
+                        <p class="text-sm text-gray-600">Tim TIK memverifikasi dan memproses. Anda akan menerima notifikasi saat layanan aktif.</p>
+                    </div>
                 </div>
             </div>
         </div>
