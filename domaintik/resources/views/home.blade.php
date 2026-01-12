@@ -4,7 +4,7 @@
 
 @section('content')
     {{-- Hero Section --}}
-    <section class="relative overflow-hidden py-20 lg:py-28">
+    <section class="relative overflow-hidden py-16 lg:py-24">
         {{-- Background Decoration --}}
         <div class="absolute inset-0 -z-10">
             <div class="absolute -left-4 top-20 h-72 w-72 rounded-full bg-myunila/20 blur-3xl"></div>
@@ -14,6 +14,21 @@
         
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="text-center">
+                {{-- Logo --}}
+                <div class="mb-8 flex items-center justify-center gap-4">
+                    <img src="{{ asset('images/logo-unila.png') }}" alt="Logo Unila" class="h-16 w-auto sm:h-20">
+                    <div class="h-16 w-px bg-gray-300 sm:h-20"></div>
+                    <img src="{{ asset('images/upatik.png') }}" alt="Logo UPA TIK" class="h-16 w-auto sm:h-20">
+                </div>
+                
+                {{-- Title --}}
+                <h1 class="mb-4 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+                    Selamat Datang di
+                    <span class="block text-myunila">
+                        DomainTIK
+                    </span>
+                </h1>
+                
                 {{-- Badge --}}
                 <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-myunila-200 bg-myunila-50 px-4 py-2 text-sm font-medium text-myunila">
                     <span class="relative flex h-2 w-2">
@@ -23,36 +38,25 @@
                     Sistem Layanan Digital UPA TIK Unila
                 </div>
                 
-                {{-- Title --}}
-                <h1 class="mb-6 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-                    Selamat Datang di
-                    <span class="mb-6 text-4xl font-bold tracking-tight text-myunila sm:text-5xl lg:text-6xl">
-                        DomainTIK 
-                    </span>
-                </h1>
-                
                 {{-- Description --}}
-                <p class="mx-auto mb-8 max-w-2xl text-lg text-gray-600 sm:text-xl">
+                <p class="mx-auto mb-10 max-w-2xl text-base text-gray-600 sm:text-lg">
                     Platform digital untuk pengajuan layanan <strong>Domain (.unila.ac.id)</strong> dan 
-                    <strong>Hosting</strong> bagi seluruh unit kerja di lingkungan 
-                    Universitas Lampung.
+                    <strong>Hosting</strong> bagi seluruh unit kerja di lingkungan Universitas Lampung.
                 </p>
                 
                 {{-- Quick Stats --}}
-                <div class="mb-12 flex flex-wrap items-center justify-center gap-8 text-center">
-                    <div>
+                <div class="flex flex-wrap items-center justify-center gap-6 text-center sm:gap-8">
+                    <div class="rounded-lg bg-white/80 px-6 py-4 shadow-sm backdrop-blur">
                         <p class="text-3xl font-bold text-myunila">100+</p>
-                        <p class="text-sm text-gray-500">Domain Aktif</p>
+                        <p class="text-sm text-gray-600">Domain Aktif</p>
                     </div>
-                    <div class="hidden h-8 w-px bg-gray-200 sm:block"></div>
-                    <div>
+                    <div class="rounded-lg bg-white/80 px-6 py-4 shadow-sm backdrop-blur">
                         <p class="text-3xl font-bold text-myunila-600">50+</p>
-                        <p class="text-sm text-gray-500">Hosting Aktif</p>
+                        <p class="text-sm text-gray-600">Hosting Aktif</p>
                     </div>
-                    <div class="hidden h-8 w-px bg-gray-200 sm:block"></div>
-                    <div>
+                    <div class="rounded-lg bg-white/80 px-6 py-4 shadow-sm backdrop-blur">
                         <p class="text-3xl font-bold text-success">8</p>
-                        <p class="text-sm text-gray-500">Fakultas Terlayani</p>
+                        <p class="text-sm text-gray-600">Fakultas Terlayani</p>
                     </div>
                 </div>
             </div>

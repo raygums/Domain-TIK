@@ -26,12 +26,8 @@
             <div class="flex h-16 items-center justify-between">
                 {{-- Logo --}}
                 <a href="{{ url('/') }}" class="flex items-center gap-3 transition hover:opacity-80">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-unila text-white shadow-lg shadow-myunila/30">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                        </svg>
-                    </div>
-                    <div>
+                    <img src="{{ asset('images/logo-unila.png') }}" alt="Logo Unila" class="h-12 w-auto">
+                    <div class="border-l border-gray-300 pl-3">
                         <span class="text-xl font-bold text-gray-900">Domain<span class="text-myunila">TIK</span></span>
                         <p class="text-xs text-gray-500">Universitas Lampung</p>
                     </div>
@@ -50,7 +46,7 @@
                         <div class="hidden items-center gap-3 sm:flex">
                             <div class="text-right">
                                 <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name }}</p>
-                                <p class="text-xs text-gray-500">{{ ucfirst(Auth::user()->role) }}</p>
+                                <p class="text-xs text-gray-500">{{ ucfirst(Auth::user()->role->value) }}</p>
                             </div>
                             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-ocean text-sm font-bold text-white">
                                 {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
@@ -107,20 +103,29 @@
     {{-- Footer --}}
     <footer class="mt-auto border-t border-gray-200 bg-white">
         <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
-                <div class="flex items-center gap-2 text-gray-500">
-                    <svg class="h-5 w-5 text-myunila" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                    </svg>
-                    <span class="text-sm font-medium">DomainTIK</span>
+            <div class="flex flex-col items-center justify-between gap-6">
+                {{-- Logos --}}
+                <div class="flex items-center gap-6">
+                    <img src="{{ asset('images/logo-unila.png') }}" alt="Logo Unila" class="h-12 w-auto">
+                    <div class="h-12 w-px bg-gray-300"></div>
+                    <img src="{{ asset('images/upatik.png') }}" alt="Logo UPA TIK" class="h-12 w-auto">
                 </div>
-                <p class="text-center text-sm text-gray-500">
-                    &copy; {{ date('Y') }} UPA TIK Universitas Lampung. Sistem Layanan Domain & Hosting.
-                </p>
-                <div class="flex items-center gap-4 text-sm text-gray-500">
+                
+                {{-- Content --}}
+                <div class="text-center">
+                    <p class="mb-2 text-sm font-semibold text-gray-900">UPA TIK Universitas Lampung</p>
+                    <p class="text-sm text-gray-500">
+                        &copy; {{ date('Y') }} Sistem Layanan Domain & Hosting Universitas Lampung
+                    </p>
+                </div>
+                
+                {{-- Links --}}
+                <div class="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-500">
                     <a href="https://tik.unila.ac.id" target="_blank" class="transition hover:text-myunila">tik.unila.ac.id</a>
                     <span>•</span>
                     <a href="mailto:helpdesk@tik.unila.ac.id" class="transition hover:text-myunila">helpdesk@tik.unila.ac.id</a>
+                    <span>•</span>
+                    <a href="https://unila.ac.id" target="_blank" class="transition hover:text-myunila">unila.ac.id</a>
                 </div>
             </div>
         </div>
