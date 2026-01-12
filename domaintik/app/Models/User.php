@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -14,9 +14,9 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'nomor_identitas', 
+        'role',          
         'password',
-        'nomor_identitas',
-        'role',
     ];
 
     protected $hidden = [
@@ -29,51 +29,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class, 
         ];
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Role Helpers
-    |--------------------------------------------------------------------------
-    */
-    public function isAdmin(): bool
+   
+    public function hasRole(UserRole $role): bool
     {
-        return $this->role === 'admin';
-    }
-
-    public function isVerifikator(): bool
-    {
-        return $this->role === 'verifikator';
-    }
-
-    public function isEksekutor(): bool
-    {
-        return $this->role === 'eksekutor';
-    }
-
-    public function isUser(): bool
-    {
-        return $this->role === 'user';
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
-    public function submissions(): HasMany
-    {
-        return $this->hasMany(Submission::class, 'applicant_id');
-    }
-
-    public function assignedVerifications(): HasMany
-    {
-        return $this->hasMany(Submission::class, 'assigned_verifier_id');
-    }
-
-    public function assignedExecutions(): HasMany
-    {
-        return $this->hasMany(Submission::class, 'assigned_executor_id');
+        return $this->role === $role;
     }
 }

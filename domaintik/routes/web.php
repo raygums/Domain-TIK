@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\DevAuthController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SubmissionController;
 use Illuminate\Support\Facades\Route;
 
@@ -10,36 +10,61 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
+    // Menggunakan view 'home' sesuai branch dev kamu
     return view('home');
 })->name('home');
 
 /*
 |--------------------------------------------------------------------------
-| Dev Auth Routes (Development Only)
+| Guest Routes (Hanya untuk yang BELUM Login)
 |--------------------------------------------------------------------------
 */
-Route::get('/dev/login/{id}', [DevAuthController::class, 'login'])->name('dev.login');
-Route::post('/logout', [DevAuthController::class, 'logout'])->name('logout');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'index'])->name('login');
+    Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+});
 
 /*
 |--------------------------------------------------------------------------
-| Submission Routes (Authenticated)
+| Authenticated Routes (Wajib Login)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    // Form Pengajuan
-    Route::get('/pengajuan/buat', [SubmissionController::class, 'create'])->name('submissions.create');
-    Route::post('/pengajuan', [SubmissionController::class, 'store'])->name('submissions.store');
     
-    // Generate PDF
-    Route::get('/pengajuan/{submission}/download-form', [SubmissionController::class, 'downloadForm'])->name('submissions.download-form');
-    Route::get('/pengajuan/{submission}/print-form', [SubmissionController::class, 'printForm'])->name('submissions.print-form');
-    
-    // Upload signed form
-    Route::get('/pengajuan/{submission}/upload', [SubmissionController::class, 'showUpload'])->name('submissions.upload');
-    Route::post('/pengajuan/{submission}/upload', [SubmissionController::class, 'storeUpload'])->name('submissions.upload.store');
-    
-    // Detail & History
-    Route::get('/pengajuan/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
-    Route::get('/pengajuan', [SubmissionController::class, 'index'])->name('submissions.index');
+    // --- Authentication ---
+    Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
+
+    // --- Dashboard ---
+    Route::get('/dashboard', function () {
+        return view('design.dashboard'); // Sesuaikan dengan lokasi file view dashboard kamu
+    })->name('dashboard');
+
+    // --- Submission Routes (Fitur Pengajuan) ---
+    // Group ini bisa diakses oleh User biasa
+    Route::prefix('pengajuan')->name('submissions.')->group(function () {
+        // Form & Store
+        Route::get('/buat', [SubmissionController::class, 'create'])->name('create');
+        Route::post('/', [SubmissionController::class, 'store'])->name('store');
+        
+        // List & Detail
+        Route::get('/', [SubmissionController::class, 'index'])->name('index');
+        Route::get('/{submission}', [SubmissionController::class, 'show'])->name('show');
+        
+        // Actions (Upload, Download, Print)
+        Route::get('/{submission}/download-form', [SubmissionController::class, 'downloadForm'])->name('download-form');
+        Route::get('/{submission}/print-form', [SubmissionController::class, 'printForm'])->name('print-form');
+        Route::get('/{submission}/upload', [SubmissionController::class, 'showUpload'])->name('upload');
+        Route::post('/{submission}/upload', [SubmissionController::class, 'storeUpload'])->name('upload.store');
+    });
+
+    // --- Admin Routes (Protected by RoleMiddleware) ---
+    // Hanya user dengan role 'admin' yang bisa masuk sini
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/users', function () {
+            return "Halaman Manajemen User (Admin Only)";
+        })->name('users');
+        
+        // Nanti tambahkan route approval/verifikasi di sini atau di group verifikator
+    });
+
 });
