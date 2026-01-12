@@ -9,7 +9,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
-   
     public function login(string $email, string $password, bool $remember = false): User
     {
         $user = User::where('email', $email)->first();
@@ -20,6 +19,7 @@ class AuthService
             ]);
         }
 
+        // Login session (Blade Frontend)
         Auth::login($user, $remember);
         session()->regenerate();
 

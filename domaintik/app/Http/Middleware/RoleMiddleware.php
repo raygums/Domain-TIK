@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
@@ -16,24 +15,16 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // 1. Cek apakah user sudah login
-        if (! Auth::check()) {
-            return redirect('login');
+        if(! $request->user()){
+            return redirect()->route('login');
         }
 
-        $user = Auth::user();
+        $userRole = $request->user()->role->value;
 
-        // 2. Ambil role user saat ini
-        // Kita handle support untuk Enum (Laravel 11/12 Casting) atau String biasa
-        $userRole = $user->role instanceof \BackedEnum ? $user->role->value : $user->role;
-
-        // 3. Cek apakah role user termasuk dalam role yang diizinkan route ini
-        // Contoh penggunaan di route: middleware('role:admin,verifikator')
-        if (in_array($userRole, $roles)) {
-            return $next($request);
+        if (!in_array($userRole, $roles)) {
+            abort(403, 'Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
 
-        // 4. Jika tidak cocok, tolak akses (403 Forbidden)
-        abort(403, 'Akses ditolak. Anda tidak memiliki izin.');
+        return $next($request);
     }
 }

@@ -1,59 +1,59 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SubmissionController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
 
-// Public Routes
 Route::get('/', function () {
     return view('home');
 })->name('home');
 
-
-//Guest Routes
+// --- GUEST ROUTES (Hanya untuk yang BELUM login) ---
 Route::middleware('guest')->group(function () {
+    // Halaman Login
     Route::get('/login', [AuthController::class, 'index'])->name('login');
+    // Proses Login
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
 });
 
-// Authenticated Routes
+// --- AUTHENTICATED ROUTES (Harus LOGIN dulu) ---
 Route::middleware('auth')->group(function () {
     
-    // --- Authentication ---
+    // Proses Logout
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 
-    // --- Dashboard ---
+    // Dashboard Utama
     Route::get('/dashboard', function () {
-        return view('design.dashboard'); // Sesuaikan dengan lokasi file view dashboard kamu
+        // Saat ini mengarah ke view design yang sudah ada
+        return view('design.dashboard');
     })->name('dashboard');
 
-    // --- Fitur Pengajuan ---
-    // Group ini bisa diakses oleh User biasa
-    Route::prefix('pengajuan')->name('submissions.')->group(function () {
-        // Form & Store
-        Route::get('/buat', [SubmissionController::class, 'create'])->name('create');
-        Route::post('/', [SubmissionController::class, 'store'])->name('store');
+    // --- ROLE: ADMIN ONLY ---
+    // Middleware 'role:admin' memastikan hanya admin yang bisa akses
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/users', function () {
+            return "Halaman Manajemen User (Hanya Admin)";
+        })->name('admin.users');
         
-        // List & Detail
-        Route::get('/', [SubmissionController::class, 'index'])->name('index');
-        Route::get('/{submission}', [SubmissionController::class, 'show'])->name('show');
-        
-        // Actions (Upload, Download, Print)
-        Route::get('/{submission}/download-form', [SubmissionController::class, 'downloadForm'])->name('download-form');
-        Route::get('/{submission}/print-form', [SubmissionController::class, 'printForm'])->name('print-form');
-        Route::get('/{submission}/upload', [SubmissionController::class, 'showUpload'])->name('upload');
-        Route::post('/{submission}/upload', [SubmissionController::class, 'storeUpload'])->name('upload.store');
+        // Tambahkan route pengelolaan domain di sini nanti
     });
 
-    // --- Admin Routes (Protected by RoleMiddleware) ---
-    // Hanya user dengan role 'admin' yang bisa masuk sini
-    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/users', function () {
-            return "Halaman Manajemen User (Admin Only)";
-        })->name('users');
-        
-        // Nanti tambahkan route approval/verifikasi di sini atau di group verifikator
+    // --- ROLE: VERIFIKATOR & ADMIN ---
+    // Middleware 'role:admin,verifikator' membolehkan kedua role ini akses
+    Route::middleware('role:admin,verifikator')->group(function () {
+        Route::get('/verifikasi-berkas', function () {
+            return "Halaman Verifikasi Berkas";
+        })->name('verifikasi.index');
     });
 
 });
