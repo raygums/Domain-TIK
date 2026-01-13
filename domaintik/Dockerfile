@@ -29,6 +29,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+# Composer install (CACHE FRIENDLY)
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader
+
+
 # --- TAMBAHAN BARU ---
 
 COPY docker-entrypoint.sh /usr/local/bin/
