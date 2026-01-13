@@ -46,7 +46,7 @@
                         <div class="hidden items-center gap-3 sm:flex">
                             <div class="text-right">
                                 <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name }}</p>
-                                <p class="text-xs text-gray-500">{{ ucfirst(Auth::user()->role->value) }}</p>
+                                <p class="text-xs text-gray-500">{{ ucfirst(Auth::user()->role->name ?? 'User') }}</p>
                             </div>
                             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-ocean text-sm font-bold text-white">
                                 {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
