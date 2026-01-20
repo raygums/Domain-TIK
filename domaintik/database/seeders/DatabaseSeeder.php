@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Seed Status Pengajuan (Referensi)
+        // Kolom audit otomatis terisi default CURRENT_TIMESTAMP dari database
         $statuses = ['Draft', 'Diajukan', 'Disetujui', 'Ditolak', 'Revisi'];
         foreach ($statuses as $status) {
             DB::table('referensi.status_pengajuan')->insert([
@@ -28,9 +29,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 3. Seed Unit Kerja (Referensi)
+        // PERBAIKAN DISINI: nm_unit diganti jadi nm_lmbg
         DB::table('referensi.unit_kerja')->insert([
             'UUID' => Str::uuid(),
-            'nm_unit' => 'Fakultas Teknik',
+            'nm_lmbg' => 'Fakultas Teknik', // <--- INI YANG BIKIN ERROR TADI
             'kode_unit' => 'FT',
             'kategori_uuid' => $catFakultasId,
             'a_aktif' => true
@@ -61,6 +63,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 6. Seed Pengguna Admin (Akun)
+        // PERBAIKAN: Timestamp manual opsional karena database sudah default current_timestamp
         DB::table('akun.pengguna')->insert([
             'UUID' => Str::uuid(),
             'nm' => 'Super Admin',
@@ -70,15 +73,9 @@ class DatabaseSeeder extends Seeder
             'tgl_lahir' => '1990-01-01',
             'kata_sandi' => Hash::make('password'),
             'peran_uuid' => $roleAdminId,
-            'a_aktif' => true,
-            'wkt_dibuat' => now()
+            'a_aktif' => true
         ]);
         
-        // 7. Seed Mapping SSO (Opsional)
-        DB::table('akun.pemetaan_peran_sso')->insert([
-            'UUID' => Str::uuid(),
-            'atribut_sso' => 'admin-group',
-            'peran_uuid' => $roleAdminId
-        ]);
+        // Catatan: id_creator dan id_updater dibiarkan NULL dulu untuk data awal
     }
 }
