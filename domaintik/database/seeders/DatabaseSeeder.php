@@ -5,84 +5,77 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // User biasa (Mahasiswa)
-        DB::table('users')->insert([
-            'name' => 'Budi Mahasiswa',
-            'email' => 'budi.mahasiswa@students.unila.ac.id',
-            'nomor_identitas' => '2215061001',
-            'role' => 'user',
-            'password' => Hash::make('password'),
-            'created_at' => now(),
-            'updated_at' => now(),
+        // 1. Seed Status Pengajuan (Referensi)
+        // Kolom audit otomatis terisi default CURRENT_TIMESTAMP dari database
+        $statuses = ['Draft', 'Diajukan', 'Disetujui', 'Ditolak', 'Revisi'];
+        foreach ($statuses as $status) {
+            DB::table('referensi.status_pengajuan')->insert([
+                'UUID' => Str::uuid(),
+                'nm_status' => $status
+            ]);
+        }
+
+        // 2. Seed Kategori Unit (Referensi)
+        $catFakultasId = Str::uuid();
+        DB::table('referensi.kategori_unit')->insert([
+            'UUID' => $catFakultasId,
+            'nm_kategori' => 'Fakultas'
         ]);
 
-        // Admin TIK (Verifikator + Admin)
-        DB::table('users')->insert([
-            'name' => 'Admin TIK',
-            'email' => 'helpdesk@tik.unila.ac.id',
-            'nomor_identitas' => '198501012010011001',
-            'role' => 'admin',
-            'password' => Hash::make('password'),
-            'created_at' => now(),
-            'updated_at' => now(),
+        // 3. Seed Unit Kerja (Referensi)
+        // PERBAIKAN DISINI: nm_unit diganti jadi nm_lmbg
+        DB::table('referensi.unit_kerja')->insert([
+            'UUID' => Str::uuid(),
+            'nm_lmbg' => 'Fakultas Teknik', // <--- INI YANG BIKIN ERROR TADI
+            'kode_unit' => 'FT',
+            'kategori_uuid' => $catFakultasId,
+            'a_aktif' => true
         ]);
 
-        // Verifikator
-        DB::table('users')->insert([
-            'name' => 'Siti Verifikator',
-            'email' => 'siti.verifikator@unila.ac.id',
-            'nomor_identitas' => '198702152011012002',
-            'role' => 'verifikator',
-            'password' => Hash::make('password'),
-            'created_at' => now(),
-            'updated_at' => now(),
+        // 4. Seed Jenis Layanan (Referensi)
+        $layanan = ['Domain Baru', 'Hosting', 'VPS'];
+        foreach ($layanan as $l) {
+            DB::table('referensi.jenis_layanan')->insert([
+                'UUID' => Str::uuid(),
+                'nm_layanan' => $l,
+                'a_aktif' => true
+            ]);
+        }
+
+        // 5. Seed Peran (Akun)
+        $roleAdminId = Str::uuid();
+        DB::table('akun.peran')->insert([
+            'UUID' => $roleAdminId,
+            'nm_peran' => 'Administrator',
+            'a_aktif' => true
         ]);
 
-        // Eksekutor (Teknisi)
-        DB::table('users')->insert([
-            'name' => 'Andi Eksekutor',
-            'email' => 'andi.teknisi@tik.unila.ac.id',
-            'nomor_identitas' => '199003202015011003',
-            'role' => 'eksekutor',
-            'password' => Hash::make('password'),
-            'created_at' => now(),
-            'updated_at' => now(),
+        DB::table('akun.peran')->insert([
+            'UUID' => Str::uuid(),
+            'nm_peran' => 'Pengguna',
+            'a_aktif' => true
         ]);
 
-        $catFakultas = DB::table('referensi.unit_categories')->insertGetId(['name' => 'Fakultas']);
-        $catLembaga  = DB::table('referensi.unit_categories')->insertGetId(['name' => 'Lembaga/UPT']);
-        $catUKM      = DB::table('referensi.unit_categories')->insertGetId(['name' => 'UKM/Organisasi']);
-
-        $units = [
-            // Fakultas
-            ['category_id' => $catFakultas, 'name' => 'Fakultas Teknik', 'code' => 'FT'],
-            ['category_id' => $catFakultas, 'name' => 'Fakultas Ekonomi dan Bisnis', 'code' => 'FEB'],
-            ['category_id' => $catFakultas, 'name' => 'Fakultas Kedokteran', 'code' => 'FK'],
-            ['category_id' => $catFakultas, 'name' => 'Fakultas Hukum', 'code' => 'FH'],
-            
-            // Lembaga
-            ['category_id' => $catLembaga, 'name' => 'UPA TIK', 'code' => 'TIK'],
-            ['category_id' => $catLembaga, 'name' => 'LP3M', 'code' => 'LP3M'],
-            
-            // UKM
-            ['category_id' => $catUKM, 'name' => 'BEM Universitas', 'code' => 'BEM-U'],
-            ['category_id' => $catUKM, 'name' => 'Hima Komputasi', 'code' => 'HIMAKOM'],
-        ];
-
-        DB::table('referensi.units')->insert($units);
-
-        DB::table('referensi.service_types')->insert([
-            ['name' => 'Pembuatan Domain Baru (.unila.ac.id)'],
-            ['name' => 'Pembuatan Hosting Baru'],
-            ['name' => 'Perpanjangan Layanan'],
-            ['name' => 'Permintaan VPS (Virtual Private Server)'],
+        // 6. Seed Pengguna Admin (Akun)
+        // PERBAIKAN: Timestamp manual opsional karena database sudah default current_timestamp
+        DB::table('akun.pengguna')->insert([
+            'UUID' => Str::uuid(),
+            'nm' => 'Super Admin',
+            'usn' => 'admin',
+            'email' => 'admin@unila.ac.id',
+            'ktp' => '1871000000000001',
+            'tgl_lahir' => '1990-01-01',
+            'kata_sandi' => Hash::make('password'),
+            'peran_uuid' => $roleAdminId,
+            'a_aktif' => true
         ]);
         
-        $this->command->info('Data Master Berhasil Ditanam! 🌱');
+        // Catatan: id_creator dan id_updater dibiarkan NULL dulu untuk data awal
     }
 }

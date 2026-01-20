@@ -24,8 +24,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 
     // --- Dashboard ---
-    Route::get('/dashboard', function () {
-        return view('design.dashboard'); // Sesuaikan dengan lokasi file view dashboard kamu
+    Route::get('/', function () {
+        return view('home'); // Sesuaikan dengan lokasi file view dashboard kamu
     })->name('dashboard');
 
     // --- Fitur Pengajuan ---
