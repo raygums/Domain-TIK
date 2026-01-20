@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -18,19 +19,15 @@ class AuthController extends Controller
     ) {}
 
     /**
-     * Menampilkan halaman login (GANTI KE DUMMY SSO).
+     * Menampilkan halaman login (DUMMY SSO).
      */
     public function index(): View
     {
-        // Jangan tampilkan form login biasa (email/pass)
-        // Tampilkan form simulasi SSO
         return view('auth.dummy_login'); 
     }
 
     /**
-     * Memproses login (LOGIKA SIMULASI SSO).
-     * Perhatikan: Kita ganti LoginRequest jadi Request biasa 
-     * karena kita tidak butuh validasi password di sini.
+     * Memproses login (LOGIKA SIMULASI SSO UPDATED).
      */
     public function store(Request $request): RedirectResponse
     {
@@ -45,61 +42,85 @@ class AuthController extends Controller
         $nip      = $request->input('nip');
         $nama     = $request->input('nama');
 
-        // 2. LOGIKA MAPPING ROLE (SSO Group -> Database Role ID)
-        $mapping = DB::table('referensi.sso_role_mappings')
-                     ->where('sso_group_name', $ssoGroup)
+        // ==========================================================
+        // PERBAIKAN 1: LOGIKA MAPPING ROLE (Tabel & Kolom Baru)
+        // ==========================================================
+        
+        // Cari Role Default (Pengguna) dulu sebagai fallback
+        $defaultRoleUuid = DB::table('akun.peran')
+                            ->where('nm_peran', 'Pengguna')
+                            ->value('UUID');
+
+        // Cek Mapping di database baru
+        $mapping = DB::table('akun.pemetaan_peran_sso')
+                     ->where('atribut_sso', $ssoGroup)
                      ->first();
 
-        // Default ke Role 1 (Pemohon) jika mapping tidak ketemu
-        $targetRoleId = $mapping ? $mapping->target_role_id : 1;
+        // Ambil UUID Role dari mapping, atau pakai default
+        $targetRoleUuid = $mapping ? $mapping->peran_uuid : $defaultRoleUuid;
 
-        // 3. CEK WHITELIST (Override untuk Admin/Verifikator)
-        // NIP "Dewa" yang kita seed tadi
-        $adminNips = [
-            '198702152011012002' => 2, // Siti -> Verifikator
-            '199003202015011003' => 3, // Andi -> Eksekutor
-            '198501012010011001' => 4, // Admin TIK -> Super Admin
+        // ==========================================================
+        // PERBAIKAN 2: CEK WHITELIST (Handling UUID)
+        // ==========================================================
+        
+        // Kita cari UUID untuk Administrator
+        $adminRoleUuid = DB::table('akun.peran')
+                           ->where('nm_peran', 'Administrator')
+                           ->value('UUID');
+
+        // Daftar NIP Spesial yang jadi Admin
+        $specialAdmins = [
+            '198501012010011001', // NIP Admin TIK
+            'admin',              // Username simpel
         ];
 
-        if (array_key_exists($nip, $adminNips)) {
-            $targetRoleId = $adminNips[$nip];
+        if (in_array($nip, $specialAdmins) && $adminRoleUuid) {
+            $targetRoleUuid = $adminRoleUuid;
         }
 
-        // 4. FIND OR CREATE USER (Auto-Provisioning)
-        $user = User::where('nomor_identitas', $nip)->first();
+        // ==========================================================
+        // PERBAIKAN 3: FIND OR CREATE USER (Kolom Baru)
+        // ==========================================================
+        
+        // Cari berdasarkan username (usn)
+        $user = User::where('usn', $nip)->first();
 
         if (!$user) {
-            // Jika user belum ada, buat baru
+            // Jika user belum ada, buat baru sesuai skema akun.pengguna
             $user = User::create([
-                'name' => $nama,
-                'email' => $nip . '@simulation.unila.ac.id', // Email dummy
-                'nomor_identitas' => $nip,
-                'role_id' => $targetRoleId, // Simpan Role ID hasil mapping
-                'password' => bcrypt('password'), // Password default (tidak dipakai login)
+                'nm'          => $nama,
+                'usn'         => $nip,      // Username pakai NIP
+                'email'       => $nip . '@simulation.unila.ac.id', // Dummy Email
+                'peran_uuid'  => $targetRoleUuid,
+                'kata_sandi'  => Hash::make('password'), // Wajib Hash
+                'a_aktif'     => true,
+                // Kolom Audit (Optional, bisa null jika di model nullable)
+                'create_at'   => now(),
             ]);
         } else {
-            // Optional: Update nama jika berubah dari SSO
-             $user->update(['name' => $nama]);
+            // Update data jika ada perubahan (Optional)
+            $user->update([
+                'nm' => $nama,
+                // Pastikan role di-update jika mapping berubah
+                'peran_uuid' => $targetRoleUuid 
+            ]);
         }
 
-        // 5. LOGIN PAKSA (Tanpa Cek Password)
+        // 4. LOGIN PAKSA
         Auth::login($user);
         $request->session()->regenerate();
 
-        // 6. Redirect ke Dashboard
         return redirect()->intended(route('dashboard'));
     }
 
     /**
-     * Logout (TETAP PAKAI YANG LAMA).
+     * Logout
      */
     public function destroy(Request $request): RedirectResponse
     {
-        // Gunakan service yang sudah ada atau logout manual
         if (method_exists($this->authService, 'logout')) {
             $this->authService->logout();
         } else {
-            // Fallback jika AuthService belum siap
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
