@@ -2,40 +2,85 @@
 
 namespace App\Models;
 
-use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\hasApiTokens;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    /**
+     * The table associated with the model.
+     */
+    protected $table = 'akun.pengguna';
+
+    /**
+     * The primary key for the model.
+     */
+    protected $primaryKey = 'UUID';
+
+    /**
+     * The "type" of the primary key ID.
+     */
+    protected $keyType = 'string';
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     */
+    public $incrementing = false;
+
+    /**
+     * Indicates if the model should be timestamped.
+     */
+    public $timestamps = false;
+
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
-        'name',
+        'nm',
+        'usn',
         'email',
-        'nomor_identitas', 
-        'role',          
-        'password',
+        'ktp',
+        'tgl_lahir',
+        'kata_sandi',
+        'peran_uuid',
+        'a_aktif',
+        'create_at',
+        'last_update',
+        'id_creator',
+        'id_updater',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'kata_sandi',
     ];
 
-    protected function casts(): array
+    /**
+     * Get the password for the user (Laravel Auth compatibility).
+     */
+    public function getAuthPassword()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'role' => UserRole::class, 
-        ];
+        return $this->kata_sandi;
     }
-   
-    public function hasRole(UserRole $role): bool
+
+    /**
+     * Get the name of the unique identifier for the user.
+     */
+    public function getAuthIdentifierName()
     {
-        return $this->role === $role;
+        return 'UUID';
+    }
+
+    /**
+     * Relationship to Peran (Role)
+     */
+    public function peran()
+    {
+        return $this->belongsTo(Peran::class, 'peran_uuid', 'UUID');
     }
 }
