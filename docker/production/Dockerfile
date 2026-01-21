@@ -43,7 +43,13 @@ RUN apk add --no-cache \
     unzip \
     acl \
     fcgi \
+    $PHPIZE_DEPS \
+    linux-headers \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && docker-php-ext-install pdo_pgsql zip bcmath gd opcache
+
+RUN apk del $PHPIZE_DEPS linux-headers
 
 # Konfigurasi PHP Production (Optimasi Opcache)
 COPY docker/production/php.ini /usr/local/etc/php/conf.d/custom.ini

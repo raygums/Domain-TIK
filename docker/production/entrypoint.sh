@@ -3,6 +3,10 @@ set -e
 
 echo "Starting Production Entrypoint..."
 
+if [ -d "/var/www/html/storage" ]; then
+    chown -R www-data:www-data /var/www/html/storage
+fi
+
 # 1. Caching Configuration (Wajib di Production untuk Performa)
 echo "Caching configuration..."
 php artisan config:cache
