@@ -1,0 +1,51 @@
+name: Sync to Bitbucket
+
+on:
+  push:
+    branches:
+      - '*'       # Menangani semua branch 
+  create:         
+  delete:         
+
+jobs:
+  sync-repo:
+    runs-on: ubuntu-latest
+    name: Syncing to Bitbucket
+    
+    steps:
+      # Checkout kode sumber (GitHub)
+      # fetch-depth: 0 sangat PENTING agar seluruh history (git log) terambil.
+      # Tanpa ini, sinkronisasi bisa gagal karena "shallow copy".
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH for Bitbucket
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.BITBUCKET_SSH_KEY }}
+
+      # Menambahkan Remote Bitbucket dan Sinkronisasi
+      # Kita menggunakan git command manual agar transparan dan fleksibel (no black-box magic).
+      # Variabel TARGET_REPO harus disesuaikan dengan URL SSH Bitbucket Anda.
+      - name: Push to Bitbucket Mirror
+        env:
+          # Ganti dengan username dan slug repo Bitbucket Anda
+          # Contoh: git@bitbucket.org:username/nama-repo.git
+          TARGET_REPO: git@bitbucket.org:mahendraunila/si-project-tik.git 
+        run: |
+          # Menambahkan remote bitbucket
+          git remote add bitbucket $TARGET_REPO
+          
+          # Konfigurasi SSH agar tidak meminta verifikasi host (StrictHostKeyChecking)
+          # Ini aman karena kita berjalan di environment ephemeral (sementara) GitHub.
+          mkdir -p ~/.ssh
+          ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
+          
+          # Melakukan Push dengan opsi --mirror
+          # --mirror: Menyalin semua refs (branches, tags, notes) persis sama dengan source.
+          # --force: Memastikan target mengikuti source, menimpa perbedaan history jika ada.
+          echo "Starting sync process..."
+          git push --mirror --force bitbucket
+          echo "Sync completed successfully."
