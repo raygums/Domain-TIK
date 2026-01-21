@@ -5,31 +5,37 @@ use App\Http\Controllers\SubmissionController;
 use Illuminate\Support\Facades\Route;
 
 
-// Public Routes
+// ==========================================
+// PUBLIC ROUTES (Bisa diakses tanpa login)
+// ==========================================
 Route::get('/', function () {
     return view('home');
 })->name('home');
 
 
-//Guest Routes
+// ==========================================
+// GUEST ROUTES (Hanya untuk yang belum login)
+// ==========================================
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'index'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
 });
 
-// Authenticated Routes
+
+// ==========================================
+// AUTHENTICATED ROUTES (Harus login dulu)
+// ==========================================
 Route::middleware('auth')->group(function () {
     
     // --- Authentication ---
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 
-    // --- Dashboard ---
-    Route::get('/', function () {
-        return view('home'); // Sesuaikan dengan lokasi file view dashboard kamu
+    // --- Dashboard (setelah login) ---
+    Route::get('/dashboard', function () {
+        return view('dashboard');
     })->name('dashboard');
 
     // --- Fitur Pengajuan ---
-    // Group ini bisa diakses oleh User biasa
     Route::prefix('pengajuan')->name('submissions.')->group(function () {
         // Form & Store
         Route::get('/buat', [SubmissionController::class, 'create'])->name('create');
@@ -46,14 +52,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/{submission}/upload', [SubmissionController::class, 'storeUpload'])->name('upload.store');
     });
 
-    // --- Admin Routes (Protected by RoleMiddleware) ---
-    // Hanya user dengan role 'admin' yang bisa masuk sini
+    // --- Admin Routes ---
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/users', function () {
             return "Halaman Manajemen User (Admin Only)";
         })->name('users');
-        
-        // Nanti tambahkan route approval/verifikasi di sini atau di group verifikator
     });
 
 });

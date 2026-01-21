@@ -43,13 +43,17 @@
                 {{-- Auth Section --}}
                 <div class="flex items-center gap-3">
                     @auth
+                        {{-- Menu untuk user yang sudah login --}}
+                        <a href="{{ route('dashboard') }}" class="hidden text-sm font-medium text-gray-600 transition hover:text-myunila sm:block">
+                            Dashboard
+                        </a>
                         <div class="hidden items-center gap-3 sm:flex">
                             <div class="text-right">
-                                <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name }}</p>
-                                <p class="text-xs text-gray-500">{{ ucfirst(Auth::user()->role->name ?? 'User') }}</p>
+                                <p class="text-sm font-medium text-gray-900">{{ Auth::user()->nm ?? Auth::user()->name }}</p>
+                                <p class="text-xs text-gray-500">{{ Auth::user()->peran->nm_peran ?? 'Pengguna' }}</p>
                             </div>
                             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-ocean text-sm font-bold text-white">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                {{ strtoupper(substr(Auth::user()->nm ?? Auth::user()->name ?? 'U', 0, 1)) }}
                             </div>
                         </div>
                         <form action="{{ route('logout') }}" method="POST">
@@ -58,11 +62,15 @@
                                 Keluar
                             </button>
                         </form>
-                   @else
-                <a href="{{ route('login') }}" class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">
-                    Log in
-                </a>
-            @endauth
+                    @else
+                        {{-- Tombol Login SSO untuk guest --}}
+                        <a href="{{ route('login') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-unila px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-myunila/30 transition hover:shadow-xl hover:shadow-myunila/40">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                            </svg>
+                            Login SSO
+                        </a>
+                    @endauth
                 </div>
             </div>
         </div>
