@@ -36,8 +36,8 @@
                 {{-- Navigation Links --}}
                 <div class="hidden items-center gap-6 md:flex">
                     <a href="{{ url('/') }}" class="text-sm font-medium text-gray-600 transition hover:text-myunila">Beranda</a>
-                    <a href="#layanan" class="text-sm font-medium text-gray-600 transition hover:text-myunila">Layanan</a>
-                    <a href="#alur" class="text-sm font-medium text-gray-600 transition hover:text-myunila">Alur Pengajuan</a>
+                    <a href="{{ url('/#layanan') }}" class="text-sm font-medium text-gray-600 transition hover:text-myunila">Layanan</a>
+                    <a href="{{ url('/#alur') }}" class="text-sm font-medium text-gray-600 transition hover:text-myunila">Alur Pengajuan</a>
                 </div>
                 
                 {{-- Auth Section --}}
