@@ -55,10 +55,19 @@ class SubmissionController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate request
-        $validated = $request->validate([
-            // Data Sub Domain
-            'jenis_domain' => 'required|in:lembaga_fakultas,kegiatan_lembaga,organisasi_mahasiswa,kegiatan_mahasiswa,lainnya',
+        // Get tipe_pengajuan to determine validation rules
+        $tipePengajuan = $request->input('tipe_pengajuan', 'pengajuan_baru');
+        $requestType = $request->input('request_type', 'domain');
+        $isPengajuanBaru = $tipePengajuan === 'pengajuan_baru';
+        $isUpgradeDowngrade = $tipePengajuan === 'upgrade_downgrade';
+        
+        // Build validation rules based on tipe_pengajuan
+        $rules = [
+            // Tipe Pengajuan
+            'tipe_pengajuan' => 'required|in:pengajuan_baru,perpanjangan,perubahan_data,upgrade_downgrade,penonaktifan,laporan_masalah',
+            
+            // Kategori Pemohon
+            'kategori_pemohon' => 'required|in:lembaga_fakultas,kegiatan_lembaga,organisasi_mahasiswa,kegiatan_mahasiswa,lainnya',
             'nama_organisasi' => 'required|string|max:255',
             
             // Data Penanggung Jawab Administratif
@@ -79,27 +88,58 @@ class SubmissionController extends Controller
             'tech_alamat_rumah' => 'nullable|string|max:255',
             'tech_email' => 'required|email|max:255',
             
-            // Data Sub Domain yang Diminta
-            'requested_domain' => 'required|string|min:2|max:12|regex:/^[a-z0-9\-]+$/',
-            'admin_password' => 'required|string|min:6|max:8',
-            
             // Hidden fields for DB compatibility
             'unit_id' => 'nullable',
             'application_name' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'request_type' => 'required|in:domain,hosting,vps',
             
-            // VPS specific
-            'vps_cpu' => 'nullable|string',
-            'vps_ram' => 'nullable|string',
-            'vps_storage' => 'nullable|string',
-            'vps_os' => 'nullable|string',
-            'vps_purpose' => 'nullable|string',
-            
-            // Hosting specific
-            'hosting_quota' => 'nullable|string',
-        ], [
-            'jenis_domain.required' => 'Jenis domain wajib dipilih.',
+            // Existing service info (for non-new submissions)
+            'existing_domain' => $isPengajuanBaru ? 'nullable|string' : 'required|string|max:255',
+            'existing_ticket' => 'nullable|string|max:50',
+            'existing_expired' => 'nullable|date',
+            'existing_notes' => $isPengajuanBaru ? 'nullable|string' : 'required|string|max:2000',
+        ];
+        
+        // Add rules for pengajuan baru or upgrade/downgrade
+        if ($isPengajuanBaru) {
+            $rules['requested_domain'] = 'required|string|min:2|max:12|regex:/^[a-z0-9\-]+$/';
+            $rules['admin_password'] = 'required|string|min:6|max:8';
+        } else {
+            $rules['requested_domain'] = 'nullable|string|min:2|max:12|regex:/^[a-z0-9\-]+$/';
+            $rules['admin_password'] = 'nullable|string|min:6|max:8';
+        }
+        
+        // VPS specific rules
+        if ($requestType === 'vps') {
+            if ($isPengajuanBaru || $isUpgradeDowngrade) {
+                $rules['vps_cpu'] = 'required|string';
+                $rules['vps_ram'] = 'required|string';
+                $rules['vps_storage'] = 'required|string';
+                $rules['vps_os'] = $isPengajuanBaru ? 'required|string' : 'nullable|string';
+                $rules['vps_purpose'] = $isPengajuanBaru ? 'required|string' : 'nullable|string';
+            } else {
+                $rules['vps_cpu'] = 'nullable|string';
+                $rules['vps_ram'] = 'nullable|string';
+                $rules['vps_storage'] = 'nullable|string';
+                $rules['vps_os'] = 'nullable|string';
+                $rules['vps_purpose'] = 'nullable|string';
+            }
+        }
+        
+        // Hosting specific rules
+        if ($requestType === 'hosting') {
+            if ($isPengajuanBaru || $isUpgradeDowngrade) {
+                $rules['hosting_quota'] = 'required|string';
+            } else {
+                $rules['hosting_quota'] = 'nullable|string';
+            }
+        }
+        
+        // Validation messages
+        $messages = [
+            'tipe_pengajuan.required' => 'Tipe pengajuan wajib dipilih.',
+            'kategori_pemohon.required' => 'Kategori pemohon wajib dipilih.',
             'nama_organisasi.required' => 'Nama lembaga/organisasi/kegiatan wajib diisi.',
             'admin_responsible_name.required' => 'Nama penanggung jawab administratif wajib diisi.',
             'admin_responsible_position.required' => 'Jabatan penanggung jawab administratif wajib diisi.',
@@ -116,12 +156,24 @@ class SubmissionController extends Controller
             'admin_password.required' => 'Admin password (hint) wajib diisi.',
             'admin_password.min' => 'Admin password minimal 6 karakter.',
             'admin_password.max' => 'Admin password maksimal 8 karakter.',
-        ]);
+            'existing_domain.required' => 'Domain/Hosting/VPS existing wajib diisi.',
+            'existing_notes.required' => 'Keterangan permohonan wajib diisi.',
+            'vps_cpu.required' => 'Jumlah CPU wajib dipilih.',
+            'vps_ram.required' => 'Kapasitas RAM wajib dipilih.',
+            'vps_storage.required' => 'Kapasitas storage wajib dipilih.',
+            'vps_os.required' => 'Sistem operasi wajib dipilih.',
+            'vps_purpose.required' => 'Tujuan penggunaan VPS wajib diisi.',
+            'hosting_quota.required' => 'Kuota storage wajib dipilih.',
+        ];
+
+        $validated = $request->validate($rules, $messages);
 
         try {
             DB::beginTransaction();
 
             $user = Auth::user();
+            $tipePengajuan = $validated['tipe_pengajuan'];
+            $isPengajuanBaru = $tipePengajuan === 'pengajuan_baru';
             
             // Get or create jenis layanan
             $jenisLayanan = JenisLayanan::firstOrCreate(
@@ -150,21 +202,36 @@ class SubmissionController extends Controller
 
             // Build keterangan_keperluan based on request type
             $keterangan = $this->buildKeterangan($validated);
+            
+            // Determine domain name based on tipe_pengajuan
+            $domainName = $isPengajuanBaru 
+                ? $this->formatDomain($validated['requested_domain'], $validated['request_type'])
+                : $validated['existing_domain'];
 
             // Create submission detail (rincian_pengajuan)
             SubmissionDetail::create([
                 'pengajuan_uuid' => $submission->UUID,
-                'nm_domain' => $this->formatDomain($validated['requested_domain']),
+                'nm_domain' => $domainName,
                 'kapasitas_penyimpanan' => $validated['hosting_quota'] ?? $validated['vps_storage'] ?? null,
                 'keterangan_keperluan' => $keterangan,
                 'id_creator' => $user->UUID,
             ]);
+            
+            // Create log title based on tipe_pengajuan
+            $logTitles = [
+                'pengajuan_baru' => 'Formulir pengajuan baru dibuat.',
+                'perpanjangan' => 'Formulir perpanjangan layanan dibuat.',
+                'perubahan_data' => 'Formulir perubahan data dibuat.',
+                'upgrade_downgrade' => 'Formulir upgrade/downgrade layanan dibuat.',
+                'penonaktifan' => 'Formulir penonaktifan layanan dibuat.',
+                'laporan_masalah' => 'Formulir laporan masalah dibuat.',
+            ];
 
             // Create log (riwayat_pengajuan)
             SubmissionLog::create([
                 'pengajuan_uuid' => $submission->UUID,
                 'status_baru_uuid' => $status->UUID,
-                'catatan_log' => 'Formulir pengajuan dibuat.',
+                'catatan_log' => $logTitles[$tipePengajuan] ?? 'Formulir pengajuan dibuat.',
                 'id_creator' => $user->UUID,
             ]);
 
@@ -188,23 +255,39 @@ class SubmissionController extends Controller
     private function buildKeterangan(array $validated): string
     {
         $data = [
-            'jenis_domain' => $validated['jenis_domain'],
+            'tipe_pengajuan' => $validated['tipe_pengajuan'],
+            'kategori_pemohon' => $validated['kategori_pemohon'],
             'nama_organisasi' => $validated['nama_organisasi'],
             'admin' => [
                 'name' => $validated['admin_responsible_name'],
                 'position' => $validated['admin_responsible_position'],
                 'nip' => $validated['admin_responsible_nip'] ?? null,
+                'alamat_kantor' => $validated['admin_alamat_kantor'] ?? null,
+                'alamat_rumah' => $validated['admin_alamat_rumah'] ?? null,
+                'telepon_kantor' => $validated['admin_telepon_kantor'] ?? null,
                 'email' => $validated['admin_email'],
                 'phone' => $validated['admin_responsible_phone'],
             ],
             'tech' => [
                 'name' => $validated['tech_name'],
                 'nip' => $validated['tech_nip'],
+                'alamat_kantor' => $validated['tech_alamat_kantor'] ?? null,
+                'alamat_rumah' => $validated['tech_alamat_rumah'] ?? null,
                 'email' => $validated['tech_email'],
                 'phone' => $validated['tech_phone'],
             ],
-            'password_hint' => $validated['admin_password'],
+            'password_hint' => $validated['admin_password'] ?? null,
         ];
+        
+        // Add existing service info for non-new submissions
+        if ($validated['tipe_pengajuan'] !== 'pengajuan_baru') {
+            $data['existing'] = [
+                'domain' => $validated['existing_domain'] ?? null,
+                'ticket' => $validated['existing_ticket'] ?? null,
+                'expired' => $validated['existing_expired'] ?? null,
+                'notes' => $validated['existing_notes'] ?? null,
+            ];
+        }
         
         // Add VPS specific data
         if ($validated['request_type'] === 'vps') {
@@ -214,6 +297,13 @@ class SubmissionController extends Controller
                 'storage' => $validated['vps_storage'] ?? null,
                 'os' => $validated['vps_os'] ?? null,
                 'purpose' => $validated['vps_purpose'] ?? null,
+            ];
+        }
+        
+        // Add hosting specific data
+        if ($validated['request_type'] === 'hosting') {
+            $data['hosting'] = [
+                'quota' => $validated['hosting_quota'] ?? null,
             ];
         }
         
@@ -333,9 +423,9 @@ class SubmissionController extends Controller
     }
 
     /**
-     * Format domain name
+     * Format domain name based on request type
      */
-    private function formatDomain(?string $domain): ?string
+    private function formatDomain(?string $domain, string $requestType = 'domain'): ?string
     {
         if (!$domain) return null;
         
@@ -344,6 +434,11 @@ class SubmissionController extends Controller
         
         // Clean up
         $domain = strtolower(preg_replace('/[^a-zA-Z0-9\-]/', '', $domain));
+        
+        // For domain type, append .unila.ac.id
+        if ($requestType === 'domain' || $requestType === 'hosting') {
+            return $domain . '.unila.ac.id';
+        }
         
         return $domain;
     }
