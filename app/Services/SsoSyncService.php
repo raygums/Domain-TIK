@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Models\Peran;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash; // Tambahkan ini
+use Illuminate\Support\Str;
 use Exception;
 
 class SsoSyncService
@@ -19,51 +21,52 @@ class SsoSyncService
 
     public function handleCallback(string $ticket): User
     {
-        // 1. Validasi Tiket
+        // 1. Validasi Tiket ke Server SSO
         $baseUrl = config('services.sso.base_url', env('SSO_BASE_URL'));
-        
-        $response = Http::get($baseUrl . '/api/validate-ticket', [
-            'ticket' => $ticket
-        ]);
+        $response = Http::get($baseUrl . '/api/validate-ticket', ['ticket' => $ticket]);
 
-        if ($response->failed()) {
-            throw new Exception("Gagal koneksi ke SSO.");
+        if ($response->failed() || !isset($response->json()['sub'])) {
+            throw new Exception("Gagal memvalidasi tiket SSO.");
         }
 
         $ssoData = $response->json();
 
-        if (!isset($ssoData['sub'])) {
-            throw new Exception("User tidak valid.");
-        }
-
-        // 2. Sync Data (Termasuk Password)
+        // 2. Transaksi Database (Sync Data)
         return DB::transaction(function () use ($ssoData) {
             
-            // Mapping Role
-            $roleName = $ssoData['role'] ?? 'Guest';
-            $peran = Peran::where('nama_peran', 'ILIKE', $roleName)->first();
-            $peranUuid = $peran ? $peran->UUID : null;
+            // Cek apakah user sudah ada di database kita?
+            $user = User::where('usn', $ssoData['sub'])->first();
 
-            // Mapping Data Lokal
-            $localData = [
-                'nm'          => $ssoData['name'],
-                'email'       => $ssoData['email'],
-                'tgl_lahir'   => $ssoData['birthdate'] ?? null,
-                'peran_uuid'  => $peranUuid,
-                'a_aktif'     => true,
-                'last_sync'   => now(),
+            // === SKENARIO A: USER BARU (REGISTRASI) ===
+            if (!$user) {
+                // Ambil Role Default: "Pemohon" (Pastikan di database tabel peran ada 'Pemohon')
+                $defaultRole = Peran::where('nama_peran', 'Pemohon')->first();
                 
-                // [KUNCI SINKRONISASI PASSWORD]
-                // Kita ambil hash langsung dari SSO.
-                // Karena sesama Laravel (Bcrypt), hash ini valid di sini juga.
-                'kata_sandi'  => $ssoData['password_hash'], 
-            ];
-
-            // Update jika ada, Buat baru jika tidak ada
-            $user = User::updateOrCreate(
-                ['usn' => $ssoData['sub']], // Kunci Sync: NIP/NPM
-                $localData
-            );
+                $user = User::create([
+                    'usn'           => $ssoData['sub'], // Identifier (NIP/NPM)
+                    'nm'            => $ssoData['name'],
+                    'email'         => $ssoData['email'],
+                    'tgl_lahir'     => $ssoData['birthdate'] ?? null,
+                    'kata_sandi'    => $ssoData['password_hash'], // Sync Password
+                    
+                    // [PENTING] Set Status NON-AKTIF untuk pendaftar baru
+                    'a_aktif'       => false, 
+                    'peran_uuid'    => $defaultRole ? $defaultRole->UUID : null,
+                    
+                    'last_sync'     => now(),
+                ]);
+            } 
+            // === SKENARIO B: USER LAMA (LOGIN RUTIN) ===
+            else {
+                // Update data profil, tapi JANGAN ubah status aktif/role manual admin
+                $user->update([
+                    'nm'            => $ssoData['name'],
+                    'email'         => $ssoData['email'],
+                    'tgl_lahir'     => $ssoData['birthdate'] ?? null,
+                    'kata_sandi'    => $ssoData['password_hash'], 
+                    'last_sync'     => now(),
+                ]);
+            }
 
             return $user;
         });

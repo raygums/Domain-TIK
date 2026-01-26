@@ -68,9 +68,15 @@ Route::middleware('auth')->group(function () {
             return "Halaman Manajemen User (Admin Only)";
         })->name('users');
     });
-    // Group Route SSO
+    // Group SSO Auth
     Route::prefix('auth/sso')->name('auth.sso.')->group(function () {
     Route::get('/redirect', [SsoAuthController::class, 'redirect'])->name('redirect');
     Route::get('/callback', [SsoAuthController::class, 'callback'])->name('callback');
     });
+
+    // Halaman Khusus Status Pending (User belum diapprove admin)
+    Route::get('/auth/pending-approval', function () {
+    return view('auth.pending-approval');
+    })->name('auth.pending');
+
 });

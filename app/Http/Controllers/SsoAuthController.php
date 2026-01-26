@@ -15,35 +15,40 @@ class SsoAuthController extends Controller
         $this->ssoService = $ssoService;
     }
 
-    // 1. Redirect User ke SSO Clone
+    // 1. Redirect (Bisa dipanggil dari tombol Login maupun Register)
     public function redirect()
     {
         return redirect($this->ssoService->getRedirectUrl());
     }
 
-    // 2. Terima Tiket & Login User
+    // 2. Callback Handler
     public function callback(Request $request)
     {
         $ticket = $request->query('ticket');
 
         if (!$ticket) {
-            return redirect()->route('login')->withErrors(['sso' => 'Tiket otentikasi tidak ditemukan.']);
+            return redirect()->route('login')->withErrors(['sso' => 'Tiket otentikasi hilang.']);
         }
 
         try {
-            // Panggil Service untuk sync data & dapatkan user lokal
+            // Proses Sync (Register User Baru / Update User Lama)
             $user = $this->ssoService->handleCallback($ticket);
 
-            // Login user ke sesi Laravel
-            Auth::login($user);
+            // [LOGIC VALIDASI ADMIN]
+            // Jika akun belum diaktifkan oleh Admin -> Tampilkan Halaman Pending
+            if (!$user->a_aktif) {
+                // Kita simpan nama di session flash untuk sapaan, tapi jangan login-kan user
+                return redirect()->route('auth.pending')->with('user_name', $user->nm);
+            }
 
-            // Regenerasi sesi untuk keamanan (Fixation Attack Protection)
+            // Jika Aktif -> Login Masuk Dashboard
+            Auth::login($user);
             $request->session()->regenerate();
 
-            return redirect()->intended('dashboard'); // Redirect ke Dashboard
+            return redirect()->intended('dashboard');
 
         } catch (\Exception $e) {
-            return redirect()->route('login')->withErrors(['sso' => 'Login Gagal: ' . $e->getMessage()]);
+            return redirect()->route('login')->withErrors(['sso' => 'Gagal Login: ' . $e->getMessage()]);
         }
     }
 }
