@@ -40,6 +40,10 @@ jobs:
           
           # 4. Push Spesifik (SOLUSI ERROR)
           # Kita hanya push branch/tag yang sedang aktif diproses (trigger).
-          # Ini MENCEGAH penghapusan branch 'main' secara tidak sengaja.
           echo "Syncing ref: ${{ github.ref }}"
           git push --force bitbucket ${{ github.ref }}
+          git push --force --tags bitbucket
+          
+          # Push SEMUA branch lain yang ada di GitHub
+          git push --force bitbucket --all
+          
