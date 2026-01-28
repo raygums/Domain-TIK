@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ExecutionController;
 use App\Http\Controllers\FormGeneratorController;
 use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -66,6 +68,25 @@ Route::middleware('auth')->group(function () {
         Route::get('/users', function () {
             return "Halaman Manajemen User (Admin Only)";
         })->name('users');
+    });
+
+    // --- Verifikator Routes ---
+    Route::middleware('role:verifikator')->prefix('verifikator')->name('verifikator.')->group(function () {
+        Route::get('/', [VerificationController::class, 'index'])->name('index');
+        Route::get('/riwayat', [VerificationController::class, 'history'])->name('history');
+        Route::get('/{submission}', [VerificationController::class, 'show'])->name('show');
+        Route::post('/{submission}/approve', [VerificationController::class, 'approve'])->name('approve');
+        Route::post('/{submission}/reject', [VerificationController::class, 'reject'])->name('reject');
+    });
+
+    // --- Eksekutor Routes ---
+    Route::middleware('role:eksekutor')->prefix('eksekutor')->name('eksekutor.')->group(function () {
+        Route::get('/', [ExecutionController::class, 'index'])->name('index');
+        Route::get('/riwayat', [ExecutionController::class, 'history'])->name('history');
+        Route::get('/{submission}', [ExecutionController::class, 'show'])->name('show');
+        Route::post('/{submission}/accept', [ExecutionController::class, 'accept'])->name('accept');
+        Route::post('/{submission}/complete', [ExecutionController::class, 'complete'])->name('complete');
+        Route::post('/{submission}/reject', [ExecutionController::class, 'reject'])->name('reject');
     });
 
 });
