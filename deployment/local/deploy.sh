@@ -40,11 +40,10 @@ get_wsl_gateway_ip() {
     fi
 }
 
-# Function to update DB_HOST in .env and docker-compose.yml
+# Function to update DB_HOST in .env files
 update_db_host() {
     local new_ip=$(get_wsl_gateway_ip)
     local project_env="$PROJECT_DIR/.env"
-    local compose_file="$COMPOSE_DIR/docker-compose.yml"
     
     if [ -n "$new_ip" ]; then
         # Update .env file
@@ -54,11 +53,6 @@ update_db_host() {
                 sed -i "s/^DB_HOST=.*/DB_HOST=$new_ip/" "$project_env"
                 echo -e "${YELLOW}Updated DB_HOST in .env: $current_ip -> $new_ip${NC}"
             fi
-        fi
-        
-        # Update docker-compose.yml
-        if [ -f "$compose_file" ]; then
-            sed -i "s/DB_HOST=.*/DB_HOST=$new_ip/" "$compose_file"
         fi
     fi
 }
@@ -380,12 +374,8 @@ while true; do
                     echo -e "${GREEN}✓ Updated deployment/local/.env${NC}"
                 fi
                 
-                # Update docker-compose.yml
-                compose_file="$COMPOSE_DIR/docker-compose.yml"
-                if [ -f "$compose_file" ]; then
-                    sed -i "s/- DB_HOST=.*$/- DB_HOST=$new_ip/" "$compose_file"
-                    echo -e "${GREEN}✓ Updated docker-compose.yml${NC}"
-                fi
+                # Note: docker-compose.yml now uses ${DB_HOST} from .env, no need to update
+                echo -e "${CYAN}ℹ docker-compose.yml will use DB_HOST from .env files${NC}"
                 
                 echo ""
                 echo -e "${GREEN}✓ All DB_HOST values updated to: ${YELLOW}$new_ip${NC}"
