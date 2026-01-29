@@ -102,9 +102,12 @@ show_menu() {
     echo -e "  ${RED}40)${NC} Cleanup Docker Resources"
     echo -e "  ${RED}41)${NC} Remove All Containers"
     echo ""
+    echo -e "  ${CYAN}--- WSL/Database ---${NC}"
+    echo -e "  ${YELLOW}50)${NC} Auto-Update DB Host IP (WSL Gateway)"
+    echo ""
     echo -e "  ${RED}0)${NC} Exit"
     echo ""
-    echo -n "Pilihan [0-41]: "
+    echo -n "Pilihan [0-50]: "
 }
 
 # Function to show container status
@@ -318,6 +321,86 @@ while true; do
                 docker compose down -v --rmi all 2>/dev/null
                 echo -e "${GREEN}✓ All resources removed!${NC}"
             fi
+            read -p "Press Enter to continue..."
+            ;;
+
+        # WSL/Database
+        50)
+            echo ""
+            echo -e "${CYAN}Auto-Updating DB Host IP...${NC}"
+            echo ""
+            
+            # Get WSL gateway IP
+            new_ip=$(ip route show | grep default | awk '{print $3}')
+            
+            # Fallback if empty
+            if [ -z "$new_ip" ]; then
+                new_ip="172.25.32.1"
+                echo -e "${YELLOW}⚠ Could not detect gateway IP, using default: $new_ip${NC}"
+            fi
+            
+            # Get current IP from .env files
+            project_env="$PROJECT_DIR/.env"
+            compose_env="$COMPOSE_DIR/.env"
+            
+            # Debug: Show which files we're checking
+            echo -e "${CYAN}Checking files:${NC}"
+            echo -e "  - $project_env"
+            echo -e "  - $compose_env"
+            echo ""
+            
+            current_ip=$(grep "^DB_HOST=" "$project_env" 2>/dev/null | cut -d'=' -f2)
+            
+            echo -e "${BLUE}Current DB_HOST in .env: ${YELLOW}'${current_ip}'${NC}"
+            echo -e "${BLUE}Detected Gateway IP: ${YELLOW}$new_ip${NC}"
+            echo ""
+            
+            # Check if update needed (empty or different)
+            if [ -z "$current_ip" ] || [ "$current_ip" != "$new_ip" ]; then
+                echo -e "${YELLOW}Updating DB_HOST to $new_ip...${NC}"
+                echo ""
+                
+                # Update .env di root project
+                if [ -f "$project_env" ]; then
+                    if grep -q "^DB_HOST=" "$project_env"; then
+                        sed -i "s/^DB_HOST=.*/DB_HOST=$new_ip/" "$project_env"
+                    else
+                        echo "DB_HOST=$new_ip" >> "$project_env"
+                    fi
+                    echo -e "${GREEN}✓ Updated $PROJECT_DIR/.env${NC}"
+                fi
+                
+                # Update .env di deployment/local
+                if [ -f "$compose_env" ]; then
+                    if grep -q "^DB_HOST=" "$compose_env"; then
+                        sed -i "s/^DB_HOST=.*/DB_HOST=$new_ip/" "$compose_env"
+                    else
+                        echo "DB_HOST=$new_ip" >> "$compose_env"
+                    fi
+                    echo -e "${GREEN}✓ Updated deployment/local/.env${NC}"
+                fi
+                
+                # Update docker-compose.yml
+                compose_file="$COMPOSE_DIR/docker-compose.yml"
+                if [ -f "$compose_file" ]; then
+                    sed -i "s/- DB_HOST=.*$/- DB_HOST=$new_ip/" "$compose_file"
+                    echo -e "${GREEN}✓ Updated docker-compose.yml${NC}"
+                fi
+                
+                echo ""
+                echo -e "${GREEN}✓ All DB_HOST values updated to: ${YELLOW}$new_ip${NC}"
+                echo ""
+                echo -e "${YELLOW}Restarting containers...${NC}"
+                cd "$COMPOSE_DIR"
+                docker compose restart
+                sleep 3
+                docker exec si-project-tik-app-dev php artisan config:cache 2>/dev/null && echo -e "${GREEN}✓ Config cache cleared${NC}"
+                echo -e "${GREEN}✓ Containers restarted!${NC}"
+            else
+                echo -e "${GREEN}✓ DB_HOST is already up-to-date!${NC}"
+            fi
+            
+            echo ""
             read -p "Press Enter to continue..."
             ;;
 
