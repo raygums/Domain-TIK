@@ -29,6 +29,34 @@ fi
 # Container names
 APP_CONTAINER="si-project-tik-app-dev"
 
+# Function to get WSL gateway IP (Windows host IP)
+get_wsl_gateway_ip() {
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        # Running in WSL - get gateway IP
+        ip route show | grep default | awk '{print $3}'
+    else
+        # Not WSL, use host.docker.internal
+        echo "host.docker.internal"
+    fi
+}
+
+# Function to update DB_HOST in .env files
+update_db_host() {
+    local new_ip=$(get_wsl_gateway_ip)
+    local project_env="$PROJECT_DIR/.env"
+    
+    if [ -n "$new_ip" ]; then
+        # Update .env file
+        if [ -f "$project_env" ]; then
+            local current_ip=$(grep "^DB_HOST=" "$project_env" | cut -d'=' -f2)
+            if [ "$current_ip" != "$new_ip" ]; then
+                sed -i "s/^DB_HOST=.*/DB_HOST=$new_ip/" "$project_env"
+                echo -e "${YELLOW}Updated DB_HOST in .env: $current_ip -> $new_ip${NC}"
+            fi
+        fi
+    fi
+}
+
 # Function to show menu
 show_menu() {
     clear
@@ -41,7 +69,7 @@ show_menu() {
     echo -e "${YELLOW}Pilih operasi:${NC}"
     echo ""
     echo -e "  ${CYAN}--- Start/Stop ---${NC}"
-    echo -e "  ${GREEN}1)${NC} Start Development (docker-compose up)"
+    echo -e "  ${GREEN}1)${NC} Start Development (docker compose up)"
     echo -e "  ${GREEN}2)${NC} Stop Development"
     echo ""
     echo -e "  ${CYAN}--- Rebuild ---${NC}"
@@ -68,9 +96,12 @@ show_menu() {
     echo -e "  ${RED}40)${NC} Cleanup Docker Resources"
     echo -e "  ${RED}41)${NC} Remove All Containers"
     echo ""
+    echo -e "  ${CYAN}--- WSL/Database ---${NC}"
+    echo -e "  ${YELLOW}50)${NC} Auto-Update DB Host IP (WSL Gateway)"
+    echo ""
     echo -e "  ${RED}0)${NC} Exit"
     echo ""
-    echo -n "Pilihan [0-41]: "
+    echo -n "Pilihan [0-50]: "
 }
 
 # Function to show container status
@@ -150,9 +181,10 @@ while true; do
         1)
             check_env || continue
             echo ""
+            update_db_host
             echo -e "${GREEN}Starting Development Environment...${NC}"
             cd "$COMPOSE_DIR"
-            docker-compose up -d --build
+            docker compose up -d --build
             echo ""
 
             # Load port from .env
@@ -167,7 +199,7 @@ while true; do
             echo ""
             echo -e "${YELLOW}Stopping Development Environment...${NC}"
             cd "$COMPOSE_DIR"
-            docker-compose down
+            docker compose down
             echo -e "${GREEN}✓ Development environment stopped!${NC}"
             read -p "Press Enter to continue..."
             ;;
@@ -179,9 +211,10 @@ while true; do
             echo -e "${RED}Clean Rebuild - This will remove container and rebuild!${NC}"
             read -p "Are you sure? (y/n): " confirm
             if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+                update_db_host
                 cd "$COMPOSE_DIR"
-                docker-compose down -v --rmi local
-                docker-compose up -d --build
+                docker compose down -v --rmi local
+                docker compose up -d --build
                 echo -e "${GREEN}✓ Clean rebuild complete!${NC}"
             fi
             read -p "Press Enter to continue..."
@@ -189,9 +222,10 @@ while true; do
         4)
             check_env || continue
             echo ""
+            update_db_host
             echo -e "${GREEN}Quick Rebuild...${NC}"
             cd "$COMPOSE_DIR"
-            docker-compose up -d --build
+            docker compose up -d --build
             echo -e "${GREEN}✓ Quick rebuild complete!${NC}"
             read -p "Press Enter to continue..."
             ;;
@@ -278,9 +312,75 @@ while true; do
             read -p "Are you sure? (y/n): " confirm
             if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
                 cd "$COMPOSE_DIR"
-                docker-compose down -v --rmi all 2>/dev/null
+                docker compose down -v --rmi all 2>/dev/null
                 echo -e "${GREEN}✓ All resources removed!${NC}"
             fi
+            read -p "Press Enter to continue..."
+            ;;
+
+        # WSL/Database
+        50)
+            echo ""
+            echo -e "${CYAN}Auto-Updating DB Host IP...${NC}"
+            echo ""
+            
+            # Get WSL gateway IP
+            new_ip=$(ip route show | grep default | awk '{print $3}')
+            
+            # Fallback if empty
+            if [ -z "$new_ip" ]; then
+                new_ip="172.25.32.1"
+                echo -e "${YELLOW}⚠ Could not detect gateway IP, using default: $new_ip${NC}"
+            fi
+            
+            # Get current IP from .env files
+            project_env="$PROJECT_DIR/.env"
+            compose_env="$COMPOSE_DIR/.env"
+            
+            # Debug: Show which files we're checking
+            echo -e "${CYAN}Checking files:${NC}"
+            echo -e "  - $project_env"
+            echo -e "  - $compose_env"
+            echo ""
+            
+            current_ip=$(grep "^DB_HOST=" "$project_env" 2>/dev/null | cut -d'=' -f2)
+            
+            echo -e "${BLUE}Current DB_HOST in .env: ${YELLOW}'${current_ip}'${NC}"
+            echo -e "${BLUE}Detected Gateway IP: ${YELLOW}$new_ip${NC}"
+            echo ""
+            
+            # Check if update needed (empty or different)
+            if [ -z "$current_ip" ] || [ "$current_ip" != "$new_ip" ]; then
+                echo -e "${YELLOW}Updating DB_HOST to $new_ip...${NC}"
+                echo ""
+                
+                # Update .env di root project
+                if [ -f "$project_env" ]; then
+                    if grep -q "^DB_HOST=" "$project_env"; then
+                        sed -i "s/^DB_HOST=.*/DB_HOST=$new_ip/" "$project_env"
+                    else
+                        echo "DB_HOST=$new_ip" >> "$project_env"
+                    fi
+                    echo -e "${GREEN}✓ Updated $PROJECT_DIR/.env${NC}"
+                fi
+                
+                # Note: docker-compose.yml now uses ${DB_HOST} from .env, no need to update
+                echo -e "${CYAN}ℹ docker-compose.yml will use DB_HOST from .env files${NC}"
+                
+                echo ""
+                echo -e "${GREEN}✓ All DB_HOST values updated to: ${YELLOW}$new_ip${NC}"
+                echo ""
+                echo -e "${YELLOW}Restarting containers...${NC}"
+                cd "$COMPOSE_DIR"
+                docker compose restart
+                sleep 3
+                docker exec si-project-tik-app-dev php artisan config:cache 2>/dev/null && echo -e "${GREEN}✓ Config cache cleared${NC}"
+                echo -e "${GREEN}✓ Containers restarted!${NC}"
+            else
+                echo -e "${GREEN}✓ DB_HOST is already up-to-date!${NC}"
+            fi
+            
+            echo ""
             read -p "Press Enter to continue..."
             ;;
 
