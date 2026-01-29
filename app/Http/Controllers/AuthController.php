@@ -19,11 +19,11 @@ class AuthController extends Controller
     ) {}
 
     /**
-     * Menampilkan halaman login (DUMMY SSO).
+     * Menampilkan halaman login.
      */
     public function index(): View
     {
-        return view('auth.dummy_login'); 
+        return view('auth.login'); 
     }
 
     /**
@@ -63,19 +63,42 @@ class AuthController extends Controller
         // PERBAIKAN 2: CEK WHITELIST (Handling UUID)
         // ==========================================================
         
-        // Kita cari UUID untuk Administrator
+        // Kita cari UUID untuk setiap role
         $adminRoleUuid = DB::table('akun.peran')
                            ->where('nm_peran', 'Administrator')
                            ->value('UUID');
+        
+        $verifikatorRoleUuid = DB::table('akun.peran')
+                                 ->where('nm_peran', 'Verifikator')
+                                 ->value('UUID');
+        
+        $eksekutorRoleUuid = DB::table('akun.peran')
+                               ->where('nm_peran', 'Eksekutor')
+                               ->value('UUID');
 
-        // Daftar NIP Spesial yang jadi Admin
+        // Daftar NIP Spesial berdasarkan role
         $specialAdmins = [
             '198501012010011001', // NIP Admin TIK
             'admin',              // Username simpel
         ];
+        
+        $specialVerifikators = [
+            '198702152011012002', // NIP Siti Nurhaliza (Verifikator)
+            'verifikator',        // Username simpel
+        ];
+        
+        $specialEksekutors = [
+            '199003202015011003', // NIP Andi Prasetyo (Eksekutor)
+            'eksekutor',          // Username simpel
+        ];
 
+        // Assign role berdasarkan NIP
         if (in_array($nip, $specialAdmins) && $adminRoleUuid) {
             $targetRoleUuid = $adminRoleUuid;
+        } elseif (in_array($nip, $specialVerifikators) && $verifikatorRoleUuid) {
+            $targetRoleUuid = $verifikatorRoleUuid;
+        } elseif (in_array($nip, $specialEksekutors) && $eksekutorRoleUuid) {
+            $targetRoleUuid = $eksekutorRoleUuid;
         }
 
         // ==========================================================
