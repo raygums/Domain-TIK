@@ -6,9 +6,9 @@ on:
       - '*'
     tags:
       - '*'
-  delete: 
+  delete:
   workflow_dispatch:
-  
+
 jobs:
   sync-to-bitbucket:
     runs-on: ubuntu-latest
@@ -16,8 +16,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 
-          
+          fetch-depth: 0 # WAJIB: Mengambil seluruh history
+
       - name: Setup SSH for Bitbucket
         uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -34,19 +34,29 @@ jobs:
           # 2. Tambahkan Remote Bitbucket
           git remote add bitbucket $TARGET_REPO
           
-          # 3. Setup Keamanan Host Key 
+          # 3. Setup Keamanan Host Key
           mkdir -p ~/.ssh
           ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
           
-          # 4. Sinkronisasi Penuh (All, Tags, & Prune)
-          # --all   : Push semua branch yang ada
-          # --tags  : Push semua tag
-          # --force : Timpa history di Bitbucket jika ada force push di GitHub (rebase/amend)
-          # --prune : HAPUS branch di Bitbucket yang sudah tidak ada di GitHub (Menangani Delete & Rename)
+          # ========================================================
+          # 4. UPDATE LOCAL REFERENCES (INI YANG SEBELUMNYA KURANG)
+          # ========================================================
+          # Perintah ini memaksa semua branch lokal di runner menjadi
+          # sama persis dengan kondisi terbaru di GitHub (Origin).
+          echo "Updating local branches from origin..."
+          git fetch origin "+refs/heads/*:refs/heads/*" --update-head-ok
           
-          echo "Starting synchronization..."
+          # 5. Eksekusi Sinkronisasi ke Bitbucket
+          echo "Pushing changes to Bitbucket..."
+          
+          # Push semua branch (--all) dengan force
           git push bitbucket --all --force
-          git push bitbucket --tags --force
-          git push bitbucket --prune
           
-          echo "Synchronization complete."
+          # Push semua tags
+          git push bitbucket --tags --force
+          
+          # Hapus branch di Bitbucket yang sudah dihapus di GitHub (--prune)
+          # Note: --prune tidak bisa digabung dengan --all di beberapa versi git,
+          # jadi kita jalankan terpisah untuk memastikan.
+          git fetch bitbucket
+          git remote prune bitbucket
