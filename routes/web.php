@@ -78,12 +78,15 @@ Route::middleware('auth')->group(function () {
 
     // --- Admin Routes ---
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', [DashboardController::class, 'adminDashboard'])->name('dashboard');
+        // Dashboard Admin
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         
-        // User Management (sama seperti Verifikator, tapi dengan prefix admin)
-        Route::get('/users', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('users');
-        Route::post('/users/{uuid}/toggle', [\App\Http\Controllers\UserManagementController::class, 'toggleStatus'])->name('users.toggle');
-        Route::post('/users/bulk-activate', [\App\Http\Controllers\UserManagementController::class, 'bulkActivate'])->name('users.bulk-activate');
+        // User Verification & Management
+        Route::get('/users/verification', [\App\Http\Controllers\Admin\AdminController::class, 'userVerification'])->name('users.verification');
+        Route::post('/users/{uuid}/toggle-status', [\App\Http\Controllers\Admin\AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
+        Route::post('/users/bulk-activate', [\App\Http\Controllers\Admin\AdminController::class, 'bulkActivate'])->name('users.bulk-activate');
+        Route::get('/users/{uuid}/logs', [\App\Http\Controllers\Admin\AdminController::class, 'userLogs'])->name('users.logs');
+        Route::get('/users/never-logged-in', [\App\Http\Controllers\Admin\AdminController::class, 'usersNeverLoggedIn'])->name('users.never-logged-in');
     });
 
     // --- Verifikator Routes ---
