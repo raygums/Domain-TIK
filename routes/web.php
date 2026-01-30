@@ -79,18 +79,26 @@ Route::middleware('auth')->group(function () {
     // --- Admin Routes ---
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [DashboardController::class, 'adminDashboard'])->name('dashboard');
-        Route::get('/users', function () {
-            return "Halaman Manajemen User (Admin Only)";
-        })->name('users');
+        
+        // User Management (sama seperti Verifikator, tapi dengan prefix admin)
+        Route::get('/users', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('users');
+        Route::post('/users/{uuid}/toggle', [\App\Http\Controllers\UserManagementController::class, 'toggleStatus'])->name('users.toggle');
+        Route::post('/users/bulk-activate', [\App\Http\Controllers\UserManagementController::class, 'bulkActivate'])->name('users.bulk-activate');
     });
 
     // --- Verifikator Routes ---
     Route::middleware('role:verifikator')->prefix('verifikator')->name('verifikator.')->group(function () {
+        // Pengajuan Verification
         Route::get('/', [VerificationController::class, 'index'])->name('index');
         Route::get('/riwayat', [VerificationController::class, 'history'])->name('history');
         Route::get('/{submission}', [VerificationController::class, 'show'])->name('show');
         Route::post('/{submission}/approve', [VerificationController::class, 'approve'])->name('approve');
         Route::post('/{submission}/reject', [VerificationController::class, 'reject'])->name('reject');
+        
+        // User Management (Aktivasi Akun)
+        Route::get('/users', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('users.index');
+        Route::post('/users/{uuid}/toggle', [\App\Http\Controllers\UserManagementController::class, 'toggleStatus'])->name('users.toggle');
+        Route::post('/users/bulk-activate', [\App\Http\Controllers\UserManagementController::class, 'bulkActivate'])->name('users.bulk-activate');
     });
 
     // --- Eksekutor Routes ---
