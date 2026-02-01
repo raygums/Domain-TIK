@@ -87,6 +87,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/bulk-activate', [\App\Http\Controllers\Admin\AdminController::class, 'bulkActivate'])->name('users.bulk-activate');
         Route::get('/users/{uuid}/logs', [\App\Http\Controllers\Admin\AdminController::class, 'userLogs'])->name('users.logs');
         Route::get('/users/never-logged-in', [\App\Http\Controllers\Admin\AdminController::class, 'usersNeverLoggedIn'])->name('users.never-logged-in');
+        
+        // Audit Logs (Login & Submission Activity)
+        Route::get('/audit/login', [\App\Http\Controllers\Admin\AuditLogController::class, 'loginLogs'])->name('audit.login');
+        Route::get('/audit/submissions', [\App\Http\Controllers\Admin\AuditLogController::class, 'submissionLogs'])->name('audit.submissions');
+        Route::get('/audit/user/{uuid}', [\App\Http\Controllers\Admin\AuditLogController::class, 'userDetail'])->name('audit.user-detail');
     });
 
     // --- Verifikator Routes ---
