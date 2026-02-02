@@ -298,7 +298,7 @@ class SSOController extends Controller
 
         Auth::logout();
         $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $request->session()->regenerateToken(); //ganti jadi session dan cookies destroy 
 
         return redirect()->route('home')
             ->with('success', 'Anda telah keluar dari aplikasi.');
