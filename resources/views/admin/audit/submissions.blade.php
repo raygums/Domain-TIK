@@ -176,19 +176,23 @@
                                 {{-- Date Range Filter --}}
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Periode Perubahan</label>
-                                    <div class="space-y-2">
-                                        <input type="date" 
-                                               name="date_from" 
-                                               id="date_from"
-                                               value="{{ $filters['date_from'] ?? '' }}"
-                                               class="block w-full rounded-lg border-gray-300 py-2 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm"
-                                               placeholder="Dari">
-                                        <input type="date" 
-                                               name="date_to" 
-                                               id="date_to"
-                                               value="{{ $filters['date_to'] ?? '' }}"
-                                               class="block w-full rounded-lg border-gray-300 py-2 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm"
-                                               placeholder="Sampai">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label for="date_from" class="block text-xs text-gray-500 mb-1">Dari</label>
+                                            <input type="date" 
+                                                   name="date_from" 
+                                                   id="date_from"
+                                                   value="{{ $filters['date_from'] ?? '' }}"
+                                                   class="block w-full rounded-lg border-gray-300 py-2 text-sm shadow-sm focus:border-myunila focus:ring-myunila">
+                                        </div>
+                                        <div>
+                                            <label for="date_to" class="block text-xs text-gray-500 mb-1">Sampai</label>
+                                            <input type="date" 
+                                                   name="date_to" 
+                                                   id="date_to"
+                                                   value="{{ $filters['date_to'] ?? '' }}"
+                                                   class="block w-full rounded-lg border-gray-300 py-2 text-sm shadow-sm focus:border-myunila focus:ring-myunila">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -317,13 +321,38 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
-        @if($logs->hasPages())
+        {{-- Pagination with Items Per Page --}}
+        @if($logs->hasPages() || $logs->total() > 10)
         <div class="border-t border-gray-200 bg-gray-50 px-6 py-4">
-            {{ $logs->links() }}
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                {{-- Items Per Page Selector --}}
+                <form method="GET" action="{{ route('admin.audit.submissions') }}" class="flex items-center gap-2">
+                    @foreach(request()->except(['per_page', 'page']) as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    
+                    <label for="per_page_submissions" class="text-sm text-gray-700">Tampilkan:</label>
+                    <select name="per_page" 
+                            id="per_page_submissions"
+                            onchange="this.form.submit()"
+                            class="rounded-md border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-myunila focus:ring-myunila">
+                        <option value="10" {{ (int)request('per_page', 20) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ (int)request('per_page', 20) == 20 ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ (int)request('per_page', 20) == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ (int)request('per_page', 20) == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                    <span class="text-sm text-gray-700">per halaman</span>
+                </form>
+
+                {{-- Pagination Links --}}
+                <div class="flex-1 flex justify-end">
+                    {{ $logs->appends(request()->query())->links() }}
+                </div>
+            </div>
         </div>
         @endif
         @endif
     </div>
 </div>
+
 @endsection

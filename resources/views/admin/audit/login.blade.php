@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Log Aktivitas Login')
+@section('title', 'Log Aktivitas')
 
 @section('content')
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -10,16 +10,35 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">
-                    Log Aktivitas Login
+                    Log Aktivitas
                 </h1>
                 <p class="mt-2 text-gray-600">
-                    Monitor aktivitas login pengguna sistem secara real-time
+                    Monitor aktivitas pengguna sistem (login & pengajuan) secara real-time
                 </p>
             </div>
             <div class="flex items-center gap-3">
                 <x-icon name="clock" class="h-8 w-8 text-myunila" />
             </div>
         </div>
+
+        {{-- Info Banner if filtering by user --}}
+        @if(isset($user) && $user)
+        <div class="mt-4 rounded-lg border-l-4 border-myunila bg-myunila-50 p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <x-icon name="user" class="h-5 w-5 text-myunila" />
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Menampilkan aktivitas untuk:</p>
+                        <p class="text-sm text-gray-600">{{ $user->nm }} ({{ $user->email }})</p>
+                    </div>
+                </div>
+                <a href="{{ route('admin.audit.login') }}" 
+                   class="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                    Tampilkan Semua
+                </a>
+            </div>
+        </div>
+        @endif
     </div>
 
     {{-- Statistics Cards --}}
@@ -89,6 +108,11 @@
         {{-- Search & Filters --}}
         <div class="border-b border-gray-200 bg-white px-6 py-4">
             <form method="GET" action="{{ route('admin.audit.login') }}" id="filterFormLogin">
+                {{-- Hidden input for user_uuid if filtering by user --}}
+                @if(isset($filters['user_uuid']) && $filters['user_uuid'])
+                <input type="hidden" name="user_uuid" value="{{ $filters['user_uuid'] }}">
+                @endif
+                
                 <div class="flex flex-col gap-3 sm:flex-row">
                     <div class="relative flex-1">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -141,6 +165,18 @@
                             </div>
 
                             <div class="p-4 space-y-4">
+                                {{-- Log Type Filter --}}
+                                <div>
+                                    <label for="log_type" class="block text-sm font-medium text-gray-700 mb-2">Tipe Log</label>
+                                    <select name="log_type" 
+                                            id="log_type"
+                                            class="block w-full rounded-lg border-gray-300 py-2 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm">
+                                        <option value="all" {{ ($filters['log_type'] ?? 'all') === 'all' ? 'selected' : '' }}>Semua Aktivitas</option>
+                                        <option value="login" {{ ($filters['log_type'] ?? '') === 'login' ? 'selected' : '' }}>Login Saja</option>
+                                        <option value="submission" {{ ($filters['log_type'] ?? '') === 'submission' ? 'selected' : '' }}>Pengajuan Saja</option>
+                                    </select>
+                                </div>
+
                                 {{-- Status Filter --}}
                                 <div>
                                     <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status Akun</label>
@@ -217,71 +253,108 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            Tipe
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                             Pengguna
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Email / Username
+                            Aktivitas
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Waktu Login
+                            Waktu
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            IP Address
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Status
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Aksi
+                            Detail
                         </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @foreach($logs as $log)
+                    @php
+                        $isLoginLog = isset($log->status_akses);
+                        $user = $isLoginLog ? $log->user : ($log->creator ?? $log->pengguna);
+                    @endphp
                     <tr class="transition hover:bg-gray-50">
                         <td class="whitespace-nowrap px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-myunila-100 text-sm font-bold text-myunila">
-                                    {{ strtoupper(substr($log->nm, 0, 2)) }}
-                                </div>
-                                <div class="font-medium text-gray-900">{{ $log->nm }}</div>
-                            </div>
+                            @if($isLoginLog)
+                                <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                                    <x-icon name="login" class="mr-1 h-3 w-3" />
+                                    Login
+                                </span>
+                            @else
+                                <span class="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-800">
+                                    <x-icon name="document-text" class="mr-1 h-3 w-3" />
+                                    Pengajuan
+                                </span>
+                            @endif
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900">{{ $log->email }}</div>
-                            <div class="text-xs text-gray-500">{{ $log->usn }}</div>
+                            @if($user)
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-myunila-100 text-xs font-bold text-myunila">
+                                    {{ strtoupper(substr($user->nm ?? 'U', 0, 2)) }}
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $user->nm ?? 'Unknown' }}</div>
+                                    <div class="text-xs text-gray-500">{{ $user->email ?? '-' }}</div>
+                                </div>
+                            </div>
+                            @else
+                                <span class="text-sm text-gray-400">-</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            @if($isLoginLog)
+                                <div class="text-sm text-gray-900">
+                                    @if($log->status_akses === 'BERHASIL')
+                                        <span class="font-medium text-success">Login Berhasil</span>
+                                    @elseif($log->status_akses === 'GAGAL_PASSWORD')
+                                        <span class="font-medium text-danger">Login Gagal - Password Salah</span>
+                                    @elseif($log->status_akses === 'GAGAL_SUSPEND')
+                                        <span class="font-medium text-warning">Login Gagal - Akun Suspended</span>
+                                    @elseif($log->status_akses === 'GAGAL_NOT_FOUND')
+                                        <span class="font-medium text-gray-600">Login Gagal - User Tidak Ditemukan</span>
+                                    @elseif($log->status_akses === 'GAGAL_SSO')
+                                        <span class="font-medium text-danger">Login Gagal - SSO Error</span>
+                                    @else
+                                        <span>{{ $log->status_akses }}</span>
+                                    @endif
+                                </div>
+                                <div class="text-xs text-gray-500">IP: {{ $log->alamat_ip ?? '-' }}</div>
+                            @else
+                                <div class="text-sm text-gray-900">
+                                    <span class="font-medium">Status Pengajuan:</span>
+                                    @if($log->statusLama)
+                                        {{ $log->statusLama->nm_status }}
+                                    @endif
+                                    →
+                                    @if($log->statusBaru)
+                                        {{ $log->statusBaru->nm_status }}
+                                    @endif
+                                </div>
+                                @if($log->catatan_log)
+                                <div class="text-xs text-gray-500">{{ Str::limit($log->catatan_log, 50) }}</div>
+                                @endif
+                            @endif
                         </td>
                         <td class="whitespace-nowrap px-6 py-4">
                             <div class="text-sm font-medium text-gray-900">
-                                {{ $log->last_login_at?->format('d M Y') }}
+                                {{ $log->create_at->format('d M Y') }}
                             </div>
                             <div class="text-xs text-gray-500">
-                                {{ $log->last_login_at?->format('H:i') }} WIB
+                                {{ $log->create_at->format('H:i') }} WIB
                             </div>
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4">
-                            <span class="font-mono text-xs text-gray-600">
-                                {{ $log->last_login_ip ?? '-' }}
-                            </span>
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4">
-                            @if($log->a_aktif)
-                            <span class="inline-flex items-center rounded-full bg-success-light px-2.5 py-0.5 text-xs font-medium text-success">
-                                <span class="mr-1 h-1.5 w-1.5 rounded-full bg-success"></span>
-                                Aktif
-                            </span>
-                            @else
-                            <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                                <span class="mr-1 h-1.5 w-1.5 rounded-full bg-gray-400"></span>
-                                Non-Aktif
-                            </span>
-                            @endif
-                        </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm">
-                            <a href="{{ route('admin.audit.user-detail', $log->UUID) }}" 
-                               class="font-medium text-myunila hover:underline">
-                                Lihat Detail
-                            </a>
+                            @if(!$isLoginLog && $log->pengajuan)
+                                <a href="{{ route('admin.submissions.show', $log->pengajuan->UUID) }}" 
+                                   class="font-medium text-myunila hover:underline">
+                                    Lihat Pengajuan
+                                </a>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
                         </td>
                     </tr>
                     @endforeach
