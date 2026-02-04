@@ -17,7 +17,7 @@
 
     {{-- Quick Stats --}}
     <div class="mb-8 grid gap-6 sm:grid-cols-3">
-        <div class="overflow-hidden rounded-2xl border border-warning-200 bg-white p-6 shadow-sm">
+        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-500">Menunggu Verifikasi</p>
@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        <div class="overflow-hidden rounded-2xl border border-success-200 bg-white p-6 shadow-sm">
+        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-500">Disetujui Hari Ini</p>
@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        <div class="overflow-hidden rounded-2xl border border-red-200 bg-white p-6 shadow-sm">
+        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-500">Ditolak Hari Ini</p>

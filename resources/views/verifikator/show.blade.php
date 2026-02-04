@@ -1,20 +1,17 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title', 'Review Pengajuan - ' . $submission->no_tiket)
 
 @section('content')
-<div class="py-8 lg:py-12">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        
-        {{-- Back Button --}}
-        <div class="mb-6">
-            <a href="{{ route('verifikator.index') }}" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-myunila">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                Kembali ke Dashboard
-            </a>
-        </div>
+<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    
+    {{-- Back Button --}}
+    <div class="mb-6">
+        <a href="{{ route('verifikator.index') }}" class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-myunila">
+            <x-icon name="arrow-left" class="h-4 w-4" />
+            Kembali ke Daftar Pengajuan
+        </a>
+    </div>
 
         {{-- Header --}}
         <div class="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">

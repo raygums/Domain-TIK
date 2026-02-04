@@ -47,14 +47,14 @@
                 'icon' => 'clipboard-list',
             ],
             [
-                'title' => 'Verifikasi Permohonan',
-                'route' => null, // Placeholder - not yet implemented
-                'icon' => 'check-circle',
+                'title' => 'Riwayat Verifikasi',
+                'route' => 'verifikator.history',
+                'icon' => 'clock',
             ],
             [
-                'title' => 'Log Aktivitas Verifikasi',
-                'route' => null, // Placeholder - not yet implemented
-                'icon' => 'document-text',
+                'title' => 'Manajemen User',
+                'route' => 'verifikator.users.index',
+                'icon' => 'user-check',
             ],
         ];
     }
