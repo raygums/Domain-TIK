@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SSOController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExecutionController;
@@ -42,6 +43,10 @@ Route::middleware('guest')->group(function () {
     
     // Proses login dengan kredensial lokal (username & password)
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+
+    // --- Registrasi User Mandiri ---
+    Route::get('/register', [RegisterController::class, 'create'])->name('register');
+    Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 });
 
 
@@ -85,11 +90,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/users/verification', [\App\Http\Controllers\Admin\AdminController::class, 'userVerification'])->name('users.verification');
         Route::post('/users/{uuid}/toggle-status', [\App\Http\Controllers\Admin\AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
         Route::post('/users/bulk-activate', [\App\Http\Controllers\Admin\AdminController::class, 'bulkActivate'])->name('users.bulk-activate');
-        Route::get('/users/{uuid}/logs', [\App\Http\Controllers\Admin\AdminController::class, 'userLogs'])->name('users.logs');
         Route::get('/users/never-logged-in', [\App\Http\Controllers\Admin\AdminController::class, 'usersNeverLoggedIn'])->name('users.never-logged-in');
         
-        // Audit Logs (Login & Submission Activity)
-        Route::get('/audit/login', [\App\Http\Controllers\Admin\AuditLogController::class, 'loginLogs'])->name('audit.login');
+        // Audit Logs (Activity: Login & Submission)
+        Route::get('/audit/aktivitas', [\App\Http\Controllers\Admin\AuditLogController::class, 'loginLogs'])->name('audit.aktivitas');
         Route::get('/audit/submissions', [\App\Http\Controllers\Admin\AuditLogController::class, 'submissionLogs'])->name('audit.submissions');
         Route::get('/audit/user/{uuid}', [\App\Http\Controllers\Admin\AuditLogController::class, 'userDetail'])->name('audit.user-detail');
     });

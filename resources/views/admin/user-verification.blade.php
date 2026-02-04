@@ -313,36 +313,25 @@
                         </td>
 
                         <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                {{-- Toggle Status --}}
-                                <form method="POST" action="{{ route('admin.users.toggle-status', $user->UUID) }}" class="inline">
-                                    @csrf
-                                    <button 
-                                        type="button"
-                                        onclick="confirmToggleStatus(this.form, '{{ $user->nm }}', {{ $user->a_aktif ? 'true' : 'false' }})"
-                                        class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition
-                                               {{ $user->a_aktif 
-                                                   ? 'bg-red-50 text-red-600 hover:bg-red-100' 
-                                                   : 'bg-success-light text-success hover:bg-green-200' }}">
-                                        @if($user->a_aktif)
-                                            <x-icon name="x-circle" class="h-4 w-4" />
-                                            Nonaktifkan
-                                        @else
-                                            <x-icon name="check-circle" class="h-4 w-4" />
-                                            Aktifkan
-                                        @endif
-                                    </button>
-                                </form>
-
-                                {{-- View Logs --}}
-                                <a 
-                                    href="{{ route('admin.users.logs', $user->UUID) }}"
-                                    class="inline-flex items-center gap-1 rounded-lg bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
-                                    title="Lihat Audit Log">
-                                    <x-icon name="document-text" class="h-4 w-4" />
-                                    Log
-                                </a>
-                            </div>
+                            {{-- Toggle Status --}}
+                            <form method="POST" action="{{ route('admin.users.toggle-status', $user->UUID) }}" class="inline">
+                                @csrf
+                                <button 
+                                    type="button"
+                                    onclick="confirmToggleStatus(this.form, '{{ $user->nm }}', {{ $user->a_aktif ? 'true' : 'false' }})"
+                                    class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition
+                                           {{ $user->a_aktif 
+                                               ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                                               : 'bg-success-light text-success hover:bg-green-200' }}">
+                                    @if($user->a_aktif)
+                                        <x-icon name="x-circle" class="h-4 w-4" />
+                                        Nonaktifkan
+                                    @else
+                                        <x-icon name="check-circle" class="h-4 w-4" />
+                                        Aktifkan
+                                    @endif
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     @empty
@@ -360,10 +349,35 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
-        @if($users->hasPages())
+        {{-- Pagination with Items Per Page --}}
+        @if($users->hasPages() || $users->total() > 10)
         <div class="border-t border-gray-200 bg-gray-50 px-6 py-4">
-            {{ $users->links() }}
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                {{-- Items Per Page Selector --}}
+                <form method="GET" action="{{ route('admin.users.verification') }}" id="perPageForm" class="flex items-center gap-2">
+                    {{-- Preserve all existing query params --}}
+                    @foreach(request()->except(['per_page', 'page']) as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    
+                    <label for="per_page_users" class="text-sm text-gray-700">Tampilkan:</label>
+                    <select name="per_page" 
+                            id="per_page_users"
+                            onchange="this.form.submit()"
+                            class="rounded-md border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-myunila focus:ring-myunila">
+                        <option value="10" {{ (int)request('per_page', 20) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ (int)request('per_page', 20) == 20 ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ (int)request('per_page', 20) == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ (int)request('per_page', 20) == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                    <span class="text-sm text-gray-700">per halaman</span>
+                </form>
+
+                {{-- Pagination Links --}}
+                <div class="flex-1 flex justify-end">
+                    {{ $users->appends(request()->query())->links() }}
+                </div>
+            </div>
         </div>
         @endif
     </div>
