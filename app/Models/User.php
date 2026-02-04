@@ -59,6 +59,7 @@ class User extends Authenticatable
         'last_update',
         'id_creator',
         'id_updater',
+        'file_ktp_ktm_path', // Path storage untuk file KTP/KTM
     ];
 
     /**
@@ -164,5 +165,28 @@ class User extends Authenticatable
     public function getDisplayNameAttribute(): string
     {
         return $this->nm ?? $this->usn ?? 'User';
+    }
+
+    /**
+     * Get URL untuk file KTP/KTM (jika ada).
+     * 
+     * Purpose: Accessor untuk mendapatkan public URL file verifikasi
+     * Return null jika file tidak ada
+     */
+    public function getFileKtpKtmUrlAttribute(): ?string
+    {
+        if (empty($this->file_ktp_ktm_path)) {
+            return null;
+        }
+
+        return asset('storage/' . $this->file_ktp_ktm_path);
+    }
+
+    /**
+     * Check apakah user sudah upload file KTP/KTM.
+     */
+    public function hasVerificationFile(): bool
+    {
+        return !empty($this->file_ktp_ktm_path);
     }
 }

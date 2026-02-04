@@ -37,7 +37,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $UUID Primary key
  * @property string|null $pengguna_uuid Foreign key to User
  * @property string|null $alamat_ip IP address (IPv4/IPv6)
- * @property string|null $perangkat User agent string
  * @property string $status_akses Login status (BERHASIL, GAGAL_PASSWORD, dll)
  * @property string|null $keterangan Additional details/error message
  * @property \Carbon\Carbon $create_at Timestamp login attempt
@@ -134,7 +133,6 @@ class LoginLog extends Model
     protected $fillable = [
         'pengguna_uuid',    // FK to User
         'alamat_ip',        // IP address (sanitized)
-        'perangkat',        // User agent (sanitized)
         'status_akses',     // Login status enum
         'keterangan',       // Additional notes
         'create_at',        // Timestamp (auto-filled by DB)
@@ -361,42 +359,5 @@ class LoginLog extends Model
             'GAGAL_SSO' => 'SSO Authentication Failed',
             default => $this->status_akses,
         };
-    }
-
-    /**
-     * Get short device info (simplified user agent)
-     * 
-     * Usage: $log->getDeviceInfo()
-     * 
-     * @return string
-     */
-    public function getDeviceInfo(): string
-    {
-        if (!$this->perangkat) {
-            return 'Unknown Device';
-        }
-
-        // Extract basic info from user agent
-        // Example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"
-        // Returns: "Chrome on Windows"
-        
-        $agent = $this->perangkat;
-        
-        // Detect browser
-        $browser = 'Unknown Browser';
-        if (str_contains($agent, 'Chrome')) $browser = 'Chrome';
-        elseif (str_contains($agent, 'Firefox')) $browser = 'Firefox';
-        elseif (str_contains($agent, 'Safari')) $browser = 'Safari';
-        elseif (str_contains($agent, 'Edge')) $browser = 'Edge';
-        
-        // Detect OS
-        $os = 'Unknown OS';
-        if (str_contains($agent, 'Windows')) $os = 'Windows';
-        elseif (str_contains($agent, 'Macintosh')) $os = 'MacOS';
-        elseif (str_contains($agent, 'Linux')) $os = 'Linux';
-        elseif (str_contains($agent, 'Android')) $os = 'Android';
-        elseif (str_contains($agent, 'iOS')) $os = 'iOS';
-        
-        return "{$browser} on {$os}";
     }
 }
