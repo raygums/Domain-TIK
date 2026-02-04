@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SSOController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExecutionController;
@@ -42,6 +43,10 @@ Route::middleware('guest')->group(function () {
     
     // Proses login dengan kredensial lokal (username & password)
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+
+    // --- Registrasi User Mandiri ---
+    Route::get('/register', [RegisterController::class, 'create'])->name('register');
+    Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 });
 
 
