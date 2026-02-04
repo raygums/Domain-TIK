@@ -348,7 +348,6 @@ class LoginHistorySeeder extends Seeder
     {
         $defaults = [
             'alamat_ip' => $this->ipAddresses[array_rand($this->ipAddresses)],
-            'perangkat' => $this->userAgents[array_rand($this->userAgents)],
         ];
 
         LoginLog::create(array_merge($defaults, $data));

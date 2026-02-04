@@ -411,13 +411,6 @@ class AdminTestingSeeder extends Seeder
         $this->command->info('🔄 Simulating login activities...');
 
         $allUsers = User::all();
-        $userAgents = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Safari/537.36',
-            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0.0.0',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Firefox/121.0',
-            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1',
-        ];
 
         foreach ($allUsers as $user) {
             // Simulate successful logins
@@ -429,7 +422,6 @@ class AdminTestingSeeder extends Seeder
                         'UUID' => Str::uuid(),
                         'pengguna_uuid' => $user->UUID,
                         'alamat_ip' => '192.168.' . rand(1, 254) . '.' . rand(1, 254),
-                        'perangkat' => $userAgents[array_rand($userAgents)],
                         'status_akses' => 'BERHASIL',
                         'keterangan' => 'Login berhasil',
                         'create_at' => Carbon::now()->subDays($daysAgo)->subMinutes(rand(0, 1440)),
@@ -448,7 +440,6 @@ class AdminTestingSeeder extends Seeder
                         'UUID' => Str::uuid(),
                         'pengguna_uuid' => $user->UUID,
                         'alamat_ip' => '192.168.' . rand(1, 254) . '.' . rand(1, 254),
-                        'perangkat' => $userAgents[array_rand($userAgents)],
                         'status_akses' => $status,
                         'keterangan' => 'Login gagal - ' . strtolower(str_replace('_', ' ', $status)),
                         'create_at' => Carbon::now()->subDays(rand(1, 30))->subMinutes(rand(0, 1440)),
@@ -465,7 +456,6 @@ class AdminTestingSeeder extends Seeder
                 'UUID' => Str::uuid(),
                 'pengguna_uuid' => $user->UUID,
                 'alamat_ip' => '10.10.' . rand(1, 254) . '.' . rand(1, 254),
-                'perangkat' => $userAgents[array_rand($userAgents)],
                 'status_akses' => 'BERHASIL',
                 'keterangan' => 'Login via SSO Unila berhasil',
                 'create_at' => Carbon::now()->subDays(rand(1, 7)),
