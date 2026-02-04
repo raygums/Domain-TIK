@@ -78,7 +78,7 @@
     </div>
 
     {{-- Login Logs Table --}}
-    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-gray-900">Riwayat Login Terbaru</h2>
@@ -86,81 +86,121 @@
             </div>
         </div>
 
-        {{-- Advanced Filters --}}
+        {{-- Search & Filters --}}
         <div class="border-b border-gray-200 bg-white px-6 py-4">
-            <form method="GET" action="{{ route('admin.audit.login') }}" class="space-y-4">
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    {{-- Search --}}
-                    <div>
-                        <label for="search" class="block text-sm font-medium text-gray-700">Cari Pengguna</label>
+            <form method="GET" action="{{ route('admin.audit.login') }}" id="filterFormLogin">
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <div class="relative flex-1">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
                         <input type="text" 
                                name="search" 
                                id="search"
                                value="{{ $filters['search'] ?? '' }}"
-                               placeholder="Nama, email, atau username..."
-                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm">
+                               placeholder="Cari nama, email, atau username..."
+                               class="block w-full rounded-lg border-gray-300 py-2.5 pl-10 pr-3 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm">
                     </div>
 
-                    {{-- Status --}}
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700">Status Akun</label>
-                        <select name="status" 
-                                id="status"
-                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm">
-                            <option value="">Semua Status</option>
-                            <option value="aktif" {{ ($filters['status'] ?? '') === 'aktif' ? 'selected' : '' }}>Aktif</option>
-                            <option value="nonaktif" {{ ($filters['status'] ?? '') === 'nonaktif' ? 'selected' : '' }}>Non-Aktif</option>
-                        </select>
-                    </div>
+                    {{-- Filter Button --}}
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        <button 
+                            type="button"
+                            @click="open = !open"
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-myunila focus:ring-offset-2 sm:w-auto">
+                            <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            <span>Filter</span>
+                        </button>
 
-                    {{-- Has Login --}}
-                    <div>
-                        <label for="has_login" class="block text-sm font-medium text-gray-700">Riwayat Login</label>
-                        <select name="has_login" 
-                                id="has_login"
-                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm">
-                            <option value="yes" {{ ($filters['has_login'] ?? 'yes') === 'yes' ? 'selected' : '' }}>Sudah Pernah Login</option>
-                            <option value="no" {{ ($filters['has_login'] ?? '') === 'no' ? 'selected' : '' }}>Belum Pernah Login</option>
-                            <option value="" {{ ($filters['has_login'] ?? '') === '' ? 'selected' : '' }}>Semua</option>
-                        </select>
-                    </div>
+                        {{-- Filter Dropdown --}}
+                        <div 
+                            x-show="open"
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 z-50 mt-2 w-96 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+                            style="display: none;">
+                            
+                            <div class="border-b border-gray-200 px-4 py-3">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-sm font-semibold text-gray-900">Filter</h3>
+                                    <a 
+                                        href="{{ route('admin.audit.login') }}"
+                                        class="text-xs font-medium text-red-600 hover:text-red-700">
+                                        Reset
+                                    </a>
+                                </div>
+                            </div>
 
-                    {{-- Date Range --}}
-                    <div>
-                        <label for="date_from" class="block text-sm font-medium text-gray-700">Tanggal Login</label>
-                        <div class="mt-1 flex gap-2">
-                            <input type="date" 
-                                   name="date_from" 
-                                   id="date_from"
-                                   value="{{ $filters['date_from'] ?? '' }}"
-                                   class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm"
-                                   placeholder="Dari">
-                            <input type="date" 
-                                   name="date_to" 
-                                   id="date_to"
-                                   value="{{ $filters['date_to'] ?? '' }}"
-                                   class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm"
-                                   placeholder="Sampai">
+                            <div class="p-4 space-y-4">
+                                {{-- Status Filter --}}
+                                <div>
+                                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status Akun</label>
+                                    <select name="status" 
+                                            id="status"
+                                            class="block w-full rounded-lg border-gray-300 py-2 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm">
+                                        <option value="">Semua Status</option>
+                                        <option value="aktif" {{ ($filters['status'] ?? '') === 'aktif' ? 'selected' : '' }}>Aktif</option>
+                                        <option value="nonaktif" {{ ($filters['status'] ?? '') === 'nonaktif' ? 'selected' : '' }}>Non-Aktif</option>
+                                    </select>
+                                </div>
+
+                                {{-- Has Login Filter --}}
+                                <div>
+                                    <label for="has_login" class="block text-sm font-medium text-gray-700 mb-2">Riwayat Login</label>
+                                    <select name="has_login" 
+                                            id="has_login"
+                                            class="block w-full rounded-lg border-gray-300 py-2 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm">
+                                        <option value="yes" {{ ($filters['has_login'] ?? 'yes') === 'yes' ? 'selected' : '' }}>Sudah Pernah Login</option>
+                                        <option value="no" {{ ($filters['has_login'] ?? '') === 'no' ? 'selected' : '' }}>Belum Pernah Login</option>
+                                        <option value="" {{ ($filters['has_login'] ?? '') === '' ? 'selected' : '' }}>Semua</option>
+                                    </select>
+                                </div>
+
+                                {{-- Date Range Filter --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Login</label>
+                                    <div class="space-y-2">
+                                        <input type="date" 
+                                               name="date_from" 
+                                               id="date_from"
+                                               value="{{ $filters['date_from'] ?? '' }}"
+                                               class="block w-full rounded-lg border-gray-300 py-2 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm"
+                                               placeholder="Dari">
+                                        <input type="date" 
+                                               name="date_to" 
+                                               id="date_to"
+                                               value="{{ $filters['date_to'] ?? '' }}"
+                                               class="block w-full rounded-lg border-gray-300 py-2 shadow-sm focus:border-myunila focus:ring-myunila sm:text-sm"
+                                               placeholder="Sampai">
+                                    </div>
+                                </div>
+
+                                {{-- Apply Button --}}
+                                <div class="flex gap-2 pt-2 border-t border-gray-100 mt-4">
+                                    <button 
+                                        type="submit"
+                                        class="flex-1 rounded-lg bg-myunila px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-myunila-600 focus:outline-none focus:ring-2 focus:ring-myunila focus:ring-offset-2">
+                                        Terapkan Filter
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="flex items-center gap-3">
+                    {{-- Search Button --}}
                     <button type="submit" 
-                            class="inline-flex items-center gap-2 rounded-lg bg-myunila px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-myunila-600 focus:outline-none focus:ring-2 focus:ring-myunila focus:ring-offset-2">
-                        <x-icon name="search" class="h-4 w-4" />
-                        Terapkan Filter
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-myunila px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-myunila-600 focus:outline-none focus:ring-2 focus:ring-myunila focus:ring-offset-2 sm:w-auto">
+                        <span>Cari</span>
                     </button>
-                    <a href="{{ route('admin.audit.login') }}" 
-                       class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-myunila focus:ring-offset-2">
-                        <x-icon name="x" class="h-4 w-4" />
-                        Reset Filter
-                    </a>
-                    @if(array_filter($filters))
-                    <span class="text-sm text-gray-500">
-                        Filter aktif: <span class="font-semibold text-myunila">{{ count(array_filter($filters)) }}</span>
-                    </span>
-                    @endif
                 </div>
             </form>
         </div>
