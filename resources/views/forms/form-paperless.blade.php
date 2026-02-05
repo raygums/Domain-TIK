@@ -87,11 +87,11 @@
                 <div class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl bg-gray-50 p-4 print:bg-gray-100">
                     <div class="flex items-center gap-3">
                         <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium
-                            @if($serviceType === 'vps') bg-info text-white
-                            @elseif($serviceType === 'hosting') bg-gradient-ocean text-white
-                            @else bg-gradient-unila text-white
+                            @if($serviceType === 'vps') bg-purple-100 text-purple-800
+                            @elseif($serviceType === 'hosting') bg-blue-100 text-blue-800
+                            @else bg-green-100 text-green-800
                             @endif">
-                            {{ ucfirst($serviceType) }}
+                            {{ $serviceType === 'vps' ? 'VPS' : ucfirst($serviceType) }}
                         </span>
                         <span class="inline-flex items-center rounded-full bg-myunila-100 px-3 py-1 text-sm font-medium text-myunila">
                             {{ $tipePengajuanLabel }}

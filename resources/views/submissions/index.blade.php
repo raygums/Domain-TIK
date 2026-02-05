@@ -60,7 +60,7 @@
                                                     </svg>
                                                 </span>
                                             @endif
-                                            <span class="text-sm text-gray-900">{{ ucfirst($serviceType) }}</span>
+                                            <span class="text-sm text-gray-900">{{ $serviceType === 'vps' ? 'VPS' : ucfirst($serviceType) }}</span>
                                         </div>
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4">

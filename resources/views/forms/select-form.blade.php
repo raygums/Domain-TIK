@@ -54,9 +54,9 @@
                     <div class="text-right">
                         <p class="text-sm text-gray-500">Jenis Layanan</p>
                         <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium
-                            @if($serviceType === 'vps') bg-info text-white
-                            @elseif($serviceType === 'hosting') bg-gradient-ocean text-white
-                            @else bg-gradient-unila text-white
+                            @if($serviceType === 'vps') badge-service-vps
+                            @elseif($serviceType === 'hosting') badge-service-hosting
+                            @else badge-service-domain
                             @endif">
                             @if($serviceType === 'vps')
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

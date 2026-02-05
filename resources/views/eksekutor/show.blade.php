@@ -36,11 +36,15 @@
                 <div class="text-right">
                     @php $serviceType = $submission->jenisLayanan?->nm_layanan ?? 'domain'; @endphp
                     <span class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium
-                        @if($serviceType === 'vps') bg-purple-100 text-purple-800
-                        @elseif($serviceType === 'hosting') bg-blue-100 text-blue-800
-                        @else bg-green-100 text-green-800
+                        @if($serviceType === 'vps') badge-service-vps
+                        @elseif($serviceType === 'hosting') badge-service-hosting
+                        @else badge-service-domain
                         @endif">
                         @if($serviceType === 'vps')
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        @elseif($serviceType === 'hosting')
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
                         </svg>
@@ -49,7 +53,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
                         </svg>
                         @endif
-                        {{ ucfirst($serviceType) }}
+                        {{ $serviceType === 'vps' ? 'VPS' : ucfirst($serviceType) }}
                     </span>
                 </div>
             </div>

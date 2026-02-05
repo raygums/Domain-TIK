@@ -78,7 +78,7 @@
                         </div>
                         <div class="flex justify-between px-6 py-4">
                             <span class="text-gray-600">Jenis Layanan</span>
-                            <span class="font-medium text-gray-900">{{ ucfirst($serviceType) }}</span>
+                            <span class="font-medium text-gray-900">{{ $serviceType === 'vps' ? 'VPS' : ucfirst($serviceType) }}</span>
                         </div>
                         <div class="flex justify-between px-6 py-4">
                             <span class="text-gray-600">Domain Diminta</span>

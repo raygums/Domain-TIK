@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Pengajuan {{ ucfirst($submission->jenisLayanan?->nm_layanan ?? 'domain') }} - {{ $submission->no_tiket }}</title>
+    <title>Form Pengajuan {{ $submission->jenisLayanan?->nm_layanan === 'vps' ? 'VPS' : ucfirst($submission->jenisLayanan?->nm_layanan ?? 'domain') }} - {{ $submission->no_tiket }}</title>
     <style>
         * {
             margin: 0;

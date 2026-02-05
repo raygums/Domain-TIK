@@ -52,9 +52,9 @@
                 'icon' => 'clock',
             ],
             [
-                'title' => 'Riwayat Saya',
+                'title' => 'Log Aktivitas',
                 'route' => 'verifikator.my-history',
-                'icon' => 'user-circle',
+                'icon' => 'document-text',
             ],
         ];
     }

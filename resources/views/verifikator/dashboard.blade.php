@@ -67,8 +67,13 @@
                     <h3 class="font-medium text-gray-900">{{ $submission->rincian->nm_subdomain ?? 'N/A' }}</h3>
                     <p class="mt-1 text-sm text-gray-500">{{ $submission->pengguna->nm }} - {{ $submission->unitKerja->nm_unit ?? 'N/A' }}</p>
                     <div class="mt-2 flex items-center gap-2">
-                        <span class="inline-flex items-center rounded-full bg-myunila-100 px-2 py-0.5 text-xs font-medium text-myunila">
-                            {{ $submission->jenisLayanan->nm_layanan }}
+                        @php $serviceType = $submission->jenisLayanan?->nm_layanan ?? 'domain'; @endphp
+                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
+                            @if($serviceType === 'vps') badge-service-vps
+                            @elseif($serviceType === 'hosting') badge-service-hosting
+                            @else badge-service-domain
+                            @endif">
+                            {{ $serviceType === 'vps' ? 'VPS' : ucfirst($serviceType) }}
                         </span>
                         <span class="text-xs text-gray-400">
                             {{ $submission->tgl_pengajuan->diffForHumans() }}

@@ -168,11 +168,11 @@
                                 <div class="mt-1 text-xs text-gray-500">
                                     Layanan: 
                                     <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
-                                        @if($activity['data']['service_type'] === 'vps') bg-purple-100 text-purple-800
-                                        @elseif($activity['data']['service_type'] === 'hosting') bg-blue-100 text-blue-800
-                                        @else bg-green-100 text-green-800
+                                        @if($activity['data']['service_type'] === 'vps') badge-service-vps
+                                        @elseif($activity['data']['service_type'] === 'hosting') badge-service-hosting
+                                        @else badge-service-domain
                                         @endif">
-                                        {{ ucfirst($activity['data']['service_type']) }}
+                                        {{ $activity['data']['service_type'] === 'vps' ? 'VPS' : ucfirst($activity['data']['service_type']) }}
                                     </span>
                                 </div>
                                 @if($activity['data']['notes'])

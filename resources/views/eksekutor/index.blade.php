@@ -186,11 +186,11 @@
                             <td class="whitespace-nowrap px-6 py-4">
                                 @php $serviceType = $submission->jenisLayanan?->nm_layanan ?? 'domain'; @endphp
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
-                                    @if($serviceType === 'vps') bg-purple-100 text-purple-800
-                                    @elseif($serviceType === 'hosting') bg-blue-100 text-blue-800
-                                    @else bg-green-100 text-green-800
+                                    @if($serviceType === 'vps') badge-service-vps
+                                    @elseif($serviceType === 'hosting') badge-service-hosting
+                                    @else badge-service-domain
                                     @endif">
-                                    {{ ucfirst($serviceType) }}
+                                        {{ $serviceType === 'vps' ? 'VPS' : ucfirst($serviceType) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">

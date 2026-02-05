@@ -106,7 +106,7 @@ Route::middleware('auth')->group(function () {
         // Pengajuan Verification
         Route::get('/daftar-pengajuan', [VerificationController::class, 'index'])->name('index');
         Route::get('/riwayat-verifikasi', [VerificationController::class, 'history'])->name('history');
-        Route::get('/riwayat-saya', [VerificationController::class, 'myHistory'])->name('my-history');
+        Route::get('/log-aktivitas', [VerificationController::class, 'myHistory'])->name('my-history');
         Route::get('/{submission}', [VerificationController::class, 'show'])->name('show');
         Route::post('/{submission}/approve', [VerificationController::class, 'approve'])->name('approve');
         Route::post('/{submission}/reject', [VerificationController::class, 'reject'])->name('reject');

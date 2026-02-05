@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Riwayat Saya - Verifikator')
+@section('title', 'Log Aktivitas - Verifikator')
 
 @section('content')
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -8,7 +8,7 @@
     {{-- Header --}}
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">
-            Riwayat Saya
+            Log Aktivitas
         </h1>
         <p class="mt-2 text-gray-600">
             Daftar verifikasi yang telah Anda lakukan.
@@ -77,7 +77,7 @@
                                         <option value="all" {{ ($filters['layanan'] ?? 'all') === 'all' ? 'selected' : '' }}>Semua Layanan</option>
                                         <option value="domain" {{ ($filters['layanan'] ?? '') === 'domain' ? 'selected' : '' }}>Domain</option>
                                         <option value="hosting" {{ ($filters['layanan'] ?? '') === 'hosting' ? 'selected' : '' }}>Hosting</option>
-                                        <option value="vps" {{ ($filters['layanan'] ?? '') === 'vps' ? 'selected' : '' }}>VPS</option>
+                                        <option value="VPS" {{ ($filters['layanan'] ?? '') === 'VPS' ? 'selected' : '' }}>VPS</option>
                                     </select>
                                 </div>
 
@@ -131,7 +131,7 @@
     <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {{-- Table Header --}}
         <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <h2 class="font-semibold text-gray-900">Riwayat Verifikasi Saya</h2>
+            <h2 class="font-semibold text-gray-900">Log Aktivitas Saya</h2>
         </div>
 
         @if($submissions->isEmpty())
@@ -167,11 +167,11 @@
                         <td class="whitespace-nowrap px-6 py-4">
                             @php $serviceType = $submission->jenisLayanan?->nm_layanan ?? 'domain'; @endphp
                             <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
-                                @if($serviceType === 'vps') bg-purple-100 text-purple-800
-                                @elseif($serviceType === 'hosting') bg-blue-100 text-blue-800
-                                @else bg-green-100 text-green-800
+                                @if($serviceType === 'vps') badge-service-vps
+                                @elseif($serviceType === 'hosting') badge-service-hosting
+                                @else badge-service-domain
                                 @endif">
-                                {{ ucfirst($serviceType) }}
+                                {{ $serviceType === 'vps' ? 'VPS' : ucfirst($serviceType) }}
                             </span>
                         </td>
                         <td class="px-6 py-4">

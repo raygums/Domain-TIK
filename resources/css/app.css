@@ -34,6 +34,14 @@
     --color-info: #3B82F6;
     --color-info-light: #DBEAFE;
     
+    /* Service Type Badge Colors */
+    --color-service-vps: #8B5CF6;
+    --color-service-vps-light: #EDE9FE;
+    --color-service-domain: #10B981;
+    --color-service-domain-light: #D1FAE5;
+    --color-service-hosting: #3B82F6;
+    --color-service-hosting-light: #DBEAFE;
+    
     /* Neutral Colors */
     --color-gray-50: #F9FAFB;
     --color-gray-100: #F3F4F6;
@@ -100,4 +108,17 @@
 /* Alpine.js x-cloak */
 [x-cloak] {
     display: none !important;
+}
+
+/* Service Type Badge Classes - Centralized */
+.badge-service-vps {
+    @apply bg-purple-100 text-purple-800;
+}
+
+.badge-service-domain {
+    @apply bg-green-100 text-green-800;
+}
+
+.badge-service-hosting {
+    @apply bg-blue-100 text-blue-800;
 }
