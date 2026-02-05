@@ -1,20 +1,17 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title', 'Review Pengajuan - ' . $submission->no_tiket)
 
 @section('content')
-<div class="py-8 lg:py-12">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        
-        {{-- Back Button --}}
-        <div class="mb-6">
-            <a href="{{ route('verifikator.index') }}" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-myunila">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                Kembali ke Dashboard
-            </a>
-        </div>
+<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    
+    {{-- Back Button --}}
+    <div class="mb-6">
+        <a href="{{ route('verifikator.index') }}" class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-myunila">
+            <x-icon name="arrow-left" class="h-4 w-4" />
+            Kembali ke Daftar Pengajuan
+        </a>
+    </div>
 
         {{-- Header --}}
         <div class="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -165,10 +162,8 @@
             
             <div class="grid gap-6 sm:grid-cols-2">
                 {{-- Approve Card --}}
-                <div class="decision-card rounded-xl border-2 border-gray-200 bg-white p-4 cursor-pointer transition-all hover:shadow-md" 
-                     data-type="approve"
-                     onclick="selectDecision('approve')">
-                    <div class="mb-4 flex items-center gap-3">
+                <div class="decision-card rounded-xl border-2 border-gray-200 bg-white p-4 cursor-pointer transition-all hover:shadow-md" data-type="approve">
+                    <div class="mb-4 flex items-center gap-3" onclick="selectDecision('approve')">
                         <div class="card-icon flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-500 transition-colors">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -179,23 +174,21 @@
                             <p class="text-xs text-gray-500">Teruskan ke Eksekutor</p>
                         </div>
                     </div>
-                    <form action="{{ route('verifikator.approve', $submission) }}" method="POST" class="card-form" style="display: none;">
+                    <form action="{{ route('verifikator.approve', $submission) }}" method="POST" class="card-form" style="display: none;" onclick="event.stopPropagation()">
                         @csrf
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
-                            <textarea name="catatan" rows="2" class="block w-full rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-success focus:ring-success" placeholder="Catatan untuk eksekutor..."></textarea>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+                            <textarea name="catatan" rows="4" class="block w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-success focus:ring-success resize-none" placeholder="Catatan untuk eksekutor..."></textarea>
                         </div>
                         <button type="submit" class="w-full rounded-lg bg-success px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-success/90 hover:shadow-md">
-                            ✓ Setujui & Teruskan
+                            Setujui & Teruskan
                         </button>
                     </form>
                 </div>
 
                 {{-- Reject Card --}}
-                <div class="decision-card rounded-xl border-2 border-gray-200 bg-white p-4 cursor-pointer transition-all hover:shadow-md" 
-                     data-type="reject"
-                     onclick="selectDecision('reject')">
-                    <div class="mb-4 flex items-center gap-3">
+                <div class="decision-card rounded-xl border-2 border-gray-200 bg-white p-4 cursor-pointer transition-all hover:shadow-md" data-type="reject">
+                    <div class="mb-4 flex items-center gap-3" onclick="selectDecision('reject')">
                         <div class="card-icon flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-500 transition-colors">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -206,17 +199,17 @@
                             <p class="text-xs text-gray-500">Kembalikan ke pemohon</p>
                         </div>
                     </div>
-                    <form action="{{ route('verifikator.reject', $submission) }}" method="POST" class="card-form" style="display: none;">
+                    <form action="{{ route('verifikator.reject', $submission) }}" method="POST" class="card-form" style="display: none;" onclick="event.stopPropagation()">
                         @csrf
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Penolakan <span class="text-error">*</span></label>
-                            <textarea name="alasan_penolakan" rows="3" required class="block w-full rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-error focus:ring-error @error('alasan_penolakan') border-error @enderror" placeholder="Jelaskan alasan penolakan..."></textarea>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alasan Penolakan <span class="text-error">*</span></label>
+                            <textarea name="alasan_penolakan" rows="4" required class="block w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-error focus:ring-error resize-none @error('alasan_penolakan') border-error @enderror" placeholder="Jelaskan alasan penolakan..."></textarea>
                             @error('alasan_penolakan')
                             <p class="mt-1 text-xs text-error">{{ $message }}</p>
                             @enderror
                         </div>
                         <button type="submit" class="w-full rounded-lg bg-error px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-error/90 hover:shadow-md">
-                            ✗ Tolak Pengajuan
+                            Tolak Pengajuan
                         </button>
                     </form>
                 </div>

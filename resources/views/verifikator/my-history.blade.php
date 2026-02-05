@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Daftar Pengajuan - Verifikator')
+@section('title', 'Riwayat Saya - Verifikator')
 
 @section('content')
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -8,69 +8,17 @@
     {{-- Header --}}
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">
-            Daftar Pengajuan
+            Riwayat Saya
         </h1>
         <p class="mt-2 text-gray-600">
-            Verifikasi pengajuan layanan domain, hosting, dan VPS.
+            Daftar verifikasi yang telah Anda lakukan.
         </p>
-    </div>
-
-    {{-- Alert --}}
-    @if(session('success'))
-    <div class="mb-6">
-        <x-alert type="success" :message="session('success')" />
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="mb-6">
-        <x-alert type="error" :message="session('error')" />
-    </div>
-    @endif
-
-    {{-- Stats Cards --}}
-    <div class="mb-8 grid gap-6 sm:grid-cols-3">
-        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Menunggu Verifikasi</p>
-                    <p class="mt-2 text-3xl font-bold text-warning">{{ number_format($stats['pending']) }}</p>
-                </div>
-                <div class="rounded-xl bg-warning-light p-3">
-                    <x-icon name="clock" class="h-8 w-8 text-warning" />
-                </div>
-            </div>
-        </div>
-
-        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Disetujui Hari Ini</p>
-                    <p class="mt-2 text-3xl font-bold text-success">{{ number_format($stats['approved_today']) }}</p>
-                </div>
-                <div class="rounded-xl bg-success-light p-3">
-                    <x-icon name="check-circle" class="h-8 w-8 text-success" />
-                </div>
-            </div>
-        </div>
-
-        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Ditolak Hari Ini</p>
-                    <p class="mt-2 text-3xl font-bold text-red-600">{{ number_format($stats['rejected_today']) }}</p>
-                </div>
-                <div class="rounded-xl bg-red-50 p-3">
-                    <x-icon name="x-circle" class="h-8 w-8 text-red-600" />
-                </div>
-            </div>
-        </div>
     </div>
 
     {{-- Filters & Search --}}
     <div class="mb-6 rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div class="p-6">
-            <form method="GET" action="{{ route('verifikator.index') }}" id="filterForm">
+            <form method="GET" action="{{ route('verifikator.my-history') }}" id="filterForm">
                 
                 <div class="flex flex-col gap-3 sm:flex-row">
                     {{-- Search Input --}}
@@ -82,7 +30,7 @@
                             type="text" 
                             name="search" 
                             value="{{ $filters['search'] ?? '' }}"
-                            placeholder="Cari nomor tiket, nama pemohon, atau domain..."
+                            placeholder="Cari nomor tiket atau nama pemohon..."
                             class="block w-full rounded-lg border-gray-300 py-2.5 pl-10 pr-3 shadow-sm transition focus:border-myunila focus:ring-myunila sm:text-sm">
                     </div>
                     
@@ -111,7 +59,7 @@
                                     <h3 class="text-sm font-semibold text-gray-900">Filter</h3>
                                     <button 
                                         type="button"
-                                        onclick="window.location.href='{{ route('verifikator.index') }}'"
+                                        onclick="window.location.href='{{ route('verifikator.my-history') }}'"
                                         class="text-xs font-medium text-red-600 hover:text-red-700">
                                         Reset
                                     </button>
@@ -179,18 +127,18 @@
         </div>
     </div>
 
-    {{-- Submissions Table --}}
+    {{-- Table --}}
     <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {{-- Table Header --}}
         <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <h2 class="font-semibold text-gray-900">Pengajuan Menunggu Verifikasi</h2>
+            <h2 class="font-semibold text-gray-900">Riwayat Verifikasi Saya</h2>
         </div>
 
         @if($submissions->isEmpty())
         <div class="p-12 text-center">
-            <x-icon name="check-circle" class="mx-auto h-16 w-16 text-gray-300" />
-            <h3 class="mt-4 text-lg font-medium text-gray-900">Tidak ada pengajuan</h3>
-            <p class="mt-2 text-gray-500">Semua pengajuan sudah diverifikasi. Bagus!</p>
+            <x-icon name="document-text" class="mx-auto h-16 w-16 text-gray-300" />
+            <h3 class="mt-4 text-lg font-medium text-gray-900">Belum ada riwayat</h3>
+            <p class="mt-2 text-gray-500">Riwayat verifikasi yang Anda lakukan akan muncul di sini.</p>
         </div>
         @else
         <div class="overflow-x-auto">
@@ -200,9 +148,10 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">No. Tiket</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Pemohon</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Layanan</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain/Request</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tanggal</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Aksi</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Keputusan</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status Saat Ini</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tanggal Verifikasi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
@@ -228,15 +177,37 @@
                         <td class="px-6 py-4">
                             <div class="max-w-xs truncate text-sm text-gray-900">{{ $submission->rincian?->nm_domain ?? '-' }}</div>
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                            {{ $submission->create_at?->format('d M Y, H:i') ?? '-' }}
+                        <td class="whitespace-nowrap px-6 py-4">
+                            @php 
+                                $myStatus = $submission->status?->nm_status ?? '-';
+                                $isApproved = str_contains($myStatus, 'Disetujui');
+                            @endphp
+                            <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium
+                                @if($isApproved) bg-success-light text-success
+                                @else bg-danger-light text-danger
+                                @endif">
+                                @if($isApproved)
+                                    <x-icon name="check-circle" class="h-3 w-3" />
+                                    Disetujui
+                                @else
+                                    <x-icon name="x-circle" class="h-3 w-3" />
+                                    Ditolak
+                                @endif
+                            </span>
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-center">
-                            <a href="{{ route('verifikator.show', $submission) }}" 
-                               class="inline-flex items-center gap-1 rounded-lg bg-myunila px-3 py-1.5 text-xs font-medium text-white transition hover:bg-myunila-dark">
-                                <x-icon name="eye" class="h-4 w-4" />
-                                Review
-                            </a>
+                        <td class="whitespace-nowrap px-6 py-4">
+                            @php $currentStatus = $submission->status?->nm_status ?? '-'; @endphp
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+                                @if(str_contains($currentStatus, 'Selesai')) bg-success-light text-success
+                                @elseif(str_contains($currentStatus, 'Disetujui')) bg-info-light text-info
+                                @elseif(str_contains($currentStatus, 'Ditolak')) bg-danger-light text-danger
+                                @else bg-warning-light text-warning
+                                @endif">
+                                {{ $currentStatus }}
+                            </span>
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                            {{ $submission->last_update?->format('d M Y, H:i') ?? '-' }}
                         </td>
                     </tr>
                     @endforeach
@@ -250,15 +221,15 @@
         <div class="border-t border-gray-200 bg-gray-50 px-6 py-4">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 {{-- Items Per Page Selector --}}
-                <form method="GET" action="{{ route('verifikator.index') }}" id="perPageForm" class="flex items-center gap-2">
+                <form method="GET" action="{{ route('verifikator.my-history') }}" id="perPageForm" class="flex items-center gap-2">
                     {{-- Preserve all existing query params --}}
                     @foreach(request()->except(['per_page', 'page']) as $key => $value)
                         <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                     @endforeach
                     
-                    <label for="per_page_submissions" class="text-sm text-gray-700">Tampilkan:</label>
+                    <label for="per_page_my_history" class="text-sm text-gray-700">Tampilkan:</label>
                     <select name="per_page" 
-                            id="per_page_submissions"
+                            id="per_page_my_history"
                             onchange="this.form.submit()"
                             class="rounded-md border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-myunila focus:ring-myunila">
                         <option value="10" {{ (int)request('per_page', 20) == 10 ? 'selected' : '' }}>10</option>
