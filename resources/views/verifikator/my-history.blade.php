@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Riwayat Verifikasi')
+@section('title', 'Riwayat Saya - Verifikator')
 
 @section('content')
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -8,17 +8,17 @@
     {{-- Header --}}
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">
-            Riwayat Verifikasi
+            Riwayat Saya
         </h1>
         <p class="mt-2 text-gray-600">
-            Pengajuan yang sudah Anda verifikasi.
+            Daftar verifikasi yang telah Anda lakukan.
         </p>
     </div>
 
     {{-- Filters & Search --}}
     <div class="mb-6 rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div class="p-6">
-            <form method="GET" action="{{ route('verifikator.history') }}" id="filterForm">
+            <form method="GET" action="{{ route('verifikator.my-history') }}" id="filterForm">
                 
                 <div class="flex flex-col gap-3 sm:flex-row">
                     {{-- Search Input --}}
@@ -59,7 +59,7 @@
                                     <h3 class="text-sm font-semibold text-gray-900">Filter</h3>
                                     <button 
                                         type="button"
-                                        onclick="window.location.href='{{ route('verifikator.history') }}'"
+                                        onclick="window.location.href='{{ route('verifikator.my-history') }}'"
                                         class="text-xs font-medium text-red-600 hover:text-red-700">
                                         Reset
                                     </button>
@@ -131,14 +131,14 @@
     <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {{-- Table Header --}}
         <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <h2 class="font-semibold text-gray-900">Riwayat Verifikasi</h2>
+            <h2 class="font-semibold text-gray-900">Riwayat Verifikasi Saya</h2>
         </div>
 
         @if($submissions->isEmpty())
         <div class="p-12 text-center">
             <x-icon name="document-text" class="mx-auto h-16 w-16 text-gray-300" />
             <h3 class="mt-4 text-lg font-medium text-gray-900">Belum ada riwayat</h3>
-            <p class="mt-2 text-gray-500">Riwayat verifikasi akan muncul di sini.</p>
+            <p class="mt-2 text-gray-500">Riwayat verifikasi yang Anda lakukan akan muncul di sini.</p>
         </div>
         @else
         <div class="overflow-x-auto">
@@ -149,9 +149,9 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Pemohon</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Layanan</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Diubah Oleh</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tanggal Update</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Keputusan</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status Saat Ini</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tanggal Verifikasi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
@@ -178,18 +178,33 @@
                             <div class="max-w-xs truncate text-sm text-gray-900">{{ $submission->rincian?->nm_domain ?? '-' }}</div>
                         </td>
                         <td class="whitespace-nowrap px-6 py-4">
-                            @php $statusName = $submission->status?->nm_status ?? '-'; @endphp
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
-                                @if(str_contains($statusName, 'Disetujui')) bg-success-light text-success
-                                @elseif(str_contains($statusName, 'Ditolak')) bg-danger-light text-danger
-                                @else bg-gray-100 text-gray-800
+                            @php 
+                                $myStatus = $submission->status?->nm_status ?? '-';
+                                $isApproved = str_contains($myStatus, 'Disetujui');
+                            @endphp
+                            <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium
+                                @if($isApproved) bg-success-light text-success
+                                @else bg-danger-light text-danger
                                 @endif">
-                                {{ $statusName }}
+                                @if($isApproved)
+                                    <x-icon name="check-circle" class="h-3 w-3" />
+                                    Disetujui
+                                @else
+                                    <x-icon name="x-circle" class="h-3 w-3" />
+                                    Ditolak
+                                @endif
                             </span>
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900">{{ $submission->updater?->nm ?? '-' }}</div>
-                            <div class="text-xs text-gray-500">{{ $submission->updater?->peran?->nm_peran ?? '' }}</div>
+                        <td class="whitespace-nowrap px-6 py-4">
+                            @php $currentStatus = $submission->status?->nm_status ?? '-'; @endphp
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+                                @if(str_contains($currentStatus, 'Selesai')) bg-success-light text-success
+                                @elseif(str_contains($currentStatus, 'Disetujui')) bg-info-light text-info
+                                @elseif(str_contains($currentStatus, 'Ditolak')) bg-danger-light text-danger
+                                @else bg-warning-light text-warning
+                                @endif">
+                                {{ $currentStatus }}
+                            </span>
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                             {{ $submission->last_update?->format('d M Y, H:i') ?? '-' }}
@@ -206,15 +221,15 @@
         <div class="border-t border-gray-200 bg-gray-50 px-6 py-4">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 {{-- Items Per Page Selector --}}
-                <form method="GET" action="{{ route('verifikator.history') }}" id="perPageForm" class="flex items-center gap-2">
+                <form method="GET" action="{{ route('verifikator.my-history') }}" id="perPageForm" class="flex items-center gap-2">
                     {{-- Preserve all existing query params --}}
                     @foreach(request()->except(['per_page', 'page']) as $key => $value)
                         <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                     @endforeach
                     
-                    <label for="per_page_history" class="text-sm text-gray-700">Tampilkan:</label>
+                    <label for="per_page_my_history" class="text-sm text-gray-700">Tampilkan:</label>
                     <select name="per_page" 
-                            id="per_page_history"
+                            id="per_page_my_history"
                             onchange="this.form.submit()"
                             class="rounded-md border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-myunila focus:ring-myunila">
                         <option value="10" {{ (int)request('per_page', 20) == 10 ? 'selected' : '' }}>10</option>

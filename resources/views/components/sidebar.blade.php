@@ -38,7 +38,7 @@
         $menus = [
             [
                 'title' => 'Dashboard',
-                'route' => 'dashboard',
+                'route' => 'verifikator.dashboard',
                 'icon' => 'home',
             ],
             [
@@ -52,9 +52,9 @@
                 'icon' => 'clock',
             ],
             [
-                'title' => 'Manajemen User',
-                'route' => 'verifikator.users.index',
-                'icon' => 'user-check',
+                'title' => 'Riwayat Saya',
+                'route' => 'verifikator.my-history',
+                'icon' => 'user-circle',
             ],
         ];
     }
