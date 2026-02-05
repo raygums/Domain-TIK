@@ -73,13 +73,13 @@
                 'icon' => 'clipboard-list',
             ],
             [
-                'title' => 'Update Status Selesai',
-                'route' => null, // Placeholder - not yet implemented
-                'icon' => 'check-badge',
+                'title' => 'Log Perubahan Status',
+                'route' => 'eksekutor.history',
+                'icon' => 'clock',
             ],
             [
-                'title' => 'Log Perubahan Status',
-                'route' => null, // Placeholder - not yet implemented
+                'title' => 'Log Pekerjaan',
+                'route' => 'eksekutor.my-history',
                 'icon' => 'document-text',
             ],
         ];
