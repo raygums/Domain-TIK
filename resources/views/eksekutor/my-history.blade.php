@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Daftar Pengajuan - Verifikator')
+@section('title', 'Log Pekerjaan - Eksekutor')
 
 @section('content')
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -8,69 +8,17 @@
     {{-- Header --}}
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">
-            Daftar Pengajuan
+            Log Pekerjaan
         </h1>
         <p class="mt-2 text-gray-600">
-            Verifikasi pengajuan layanan domain, hosting, dan VPS.
+            Riwayat pengajuan yang telah Anda proses.
         </p>
-    </div>
-
-    {{-- Alert --}}
-    @if(session('success'))
-    <div class="mb-6">
-        <x-alert type="success" :message="session('success')" />
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="mb-6">
-        <x-alert type="error" :message="session('error')" />
-    </div>
-    @endif
-
-    {{-- Stats Cards --}}
-    <div class="mb-8 grid gap-6 sm:grid-cols-3">
-        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Menunggu Verifikasi</p>
-                    <p class="mt-2 text-3xl font-bold text-warning">{{ number_format($stats['pending']) }}</p>
-                </div>
-                <div class="rounded-xl bg-warning-light p-3">
-                    <x-icon name="clock" class="h-8 w-8 text-warning" />
-                </div>
-            </div>
-        </div>
-
-        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Disetujui Hari Ini</p>
-                    <p class="mt-2 text-3xl font-bold text-success">{{ number_format($stats['approved_today']) }}</p>
-                </div>
-                <div class="rounded-xl bg-success-light p-3">
-                    <x-icon name="check-circle" class="h-8 w-8 text-success" />
-                </div>
-            </div>
-        </div>
-
-        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Ditolak Hari Ini</p>
-                    <p class="mt-2 text-3xl font-bold text-red-600">{{ number_format($stats['rejected_today']) }}</p>
-                </div>
-                <div class="rounded-xl bg-red-50 p-3">
-                    <x-icon name="x-circle" class="h-8 w-8 text-red-600" />
-                </div>
-            </div>
-        </div>
     </div>
 
     {{-- Filters & Search --}}
     <div class="mb-6 rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div class="p-6">
-            <form method="GET" action="{{ route('verifikator.index') }}" id="filterForm">
+            <form method="GET" action="{{ route('eksekutor.my-history') }}" id="filterForm">
                 
                 <div class="flex flex-col gap-3 sm:flex-row">
                     {{-- Search Input --}}
@@ -82,7 +30,7 @@
                             type="text" 
                             name="search" 
                             value="{{ $filters['search'] ?? '' }}"
-                            placeholder="Cari nomor tiket, nama pemohon, atau domain..."
+                            placeholder="Cari nomor tiket atau nama pemohon..."
                             class="block w-full rounded-lg border-gray-300 py-2.5 pl-10 pr-3 shadow-sm transition focus:border-myunila focus:ring-myunila sm:text-sm">
                     </div>
                     
@@ -111,7 +59,7 @@
                                     <h3 class="text-sm font-semibold text-gray-900">Filter</h3>
                                     <button 
                                         type="button"
-                                        onclick="window.location.href='{{ route('verifikator.index') }}'"
+                                        onclick="window.location.href='{{ route('eksekutor.my-history') }}'"
                                         class="text-xs font-medium text-red-600 hover:text-red-700">
                                         Reset
                                     </button>
@@ -129,7 +77,21 @@
                                         <option value="all" {{ ($filters['layanan'] ?? 'all') === 'all' ? 'selected' : '' }}>Semua Layanan</option>
                                         <option value="domain" {{ ($filters['layanan'] ?? '') === 'domain' ? 'selected' : '' }}>Domain</option>
                                         <option value="hosting" {{ ($filters['layanan'] ?? '') === 'hosting' ? 'selected' : '' }}>Hosting</option>
-                                        <option value="VPS" {{ ($filters['layanan'] ?? '') === 'VPS' ? 'selected' : '' }}>VPS</option>
+                                        <option value="vps" {{ ($filters['layanan'] ?? '') === 'vps' ? 'selected' : '' }}>VPS</option>
+                                    </select>
+                                </div>
+
+                                {{-- Status Filter --}}
+                                <div>
+                                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                    <select 
+                                        id="status"
+                                        name="status" 
+                                        class="block w-full rounded-lg border-gray-300 py-2 shadow-sm transition focus:border-myunila focus:ring-myunila sm:text-sm">
+                                        <option value="all" {{ ($filters['status'] ?? 'all') === 'all' ? 'selected' : '' }}>Semua Status</option>
+                                        <option value="sedang_dikerjakan" {{ ($filters['status'] ?? '') === 'sedang_dikerjakan' ? 'selected' : '' }}>Sedang Dikerjakan</option>
+                                        <option value="selesai" {{ ($filters['status'] ?? '') === 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                        <option value="ditolak" {{ ($filters['status'] ?? '') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                                     </select>
                                 </div>
 
@@ -179,18 +141,66 @@
         </div>
     </div>
 
-    {{-- Submissions Table --}}
+    {{-- Sedang Dikerjakan Section --}}
+    @if(isset($inProgress) && $inProgress->isNotEmpty())
+    <div class="mb-8 overflow-hidden rounded-2xl border-2 border-info/30 bg-white shadow-sm">
+        <div class="border-b border-info/20 bg-info-light px-6 py-4">
+            <h2 class="flex items-center gap-2 font-semibold text-info">
+                <x-icon name="cog" class="h-5 w-5" />
+                Sedang Anda Kerjakan
+            </h2>
+        </div>
+        <div class="divide-y divide-gray-100">
+            @foreach($inProgress as $submission)
+            <div class="flex items-center justify-between p-4 hover:bg-gray-50">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-info-light text-info">
+                        @php $serviceType = strtolower($submission->jenisLayanan?->nm_layanan ?? 'domain'); @endphp
+                        @if($serviceType === 'vps')
+                        <x-icon name="server" class="h-5 w-5" />
+                        @elseif($serviceType === 'hosting')
+                        <x-icon name="server" class="h-5 w-5" />
+                        @else
+                        <x-icon name="globe-alt" class="h-5 w-5" />
+                        @endif
+                    </div>
+                    <div>
+                        <p class="font-mono text-sm font-semibold text-myunila">{{ $submission->no_tiket }}</p>
+                        <p class="text-sm text-gray-600">{{ $submission->rincian?->nm_domain ?? '-' }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+                        @if($serviceType === 'vps') badge-service-vps
+                        @elseif($serviceType === 'hosting') badge-service-hosting
+                        @else badge-service-domain
+                        @endif">
+                        {{ $serviceType === 'vps' ? 'VPS' : ucfirst($serviceType) }}
+                    </span>
+                    <a href="{{ route('eksekutor.show', $submission) }}" 
+                       class="inline-flex items-center gap-1 rounded-lg bg-myunila px-3 py-1.5 text-xs font-medium text-white transition hover:bg-myunila-dark">
+                        Lanjutkan
+                        <x-icon name="arrow-right" class="h-4 w-4" />
+                    </a>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- Table --}}
     <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {{-- Table Header --}}
         <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <h2 class="font-semibold text-gray-900">Pengajuan Menunggu Verifikasi</h2>
+            <h2 class="font-semibold text-gray-900">Riwayat Pekerjaan Saya</h2>
         </div>
 
         @if($submissions->isEmpty())
         <div class="p-12 text-center">
-            <x-icon name="check-circle" class="mx-auto h-16 w-16 text-gray-300" />
-            <h3 class="mt-4 text-lg font-medium text-gray-900">Tidak ada pengajuan</h3>
-            <p class="mt-2 text-gray-500">Semua pengajuan sudah diverifikasi. Bagus!</p>
+            <x-icon name="document-text" class="mx-auto h-16 w-16 text-gray-300" />
+            <h3 class="mt-4 text-lg font-medium text-gray-900">Belum ada riwayat</h3>
+            <p class="mt-2 text-gray-500">Pengajuan yang Anda kerjakan akan muncul di sini.</p>
         </div>
         @else
         <div class="overflow-x-auto">
@@ -201,7 +211,8 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Pemohon</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Layanan</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tanggal</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tanggal Proses</th>
                         <th scope="col" class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Aksi</th>
                     </tr>
                 </thead>
@@ -216,7 +227,7 @@
                             <div class="text-xs text-gray-500">{{ $submission->unitKerja?->nm_lmbg ?? '-' }}</div>
                         </td>
                         <td class="whitespace-nowrap px-6 py-4">
-                            @php $serviceType = $submission->jenisLayanan?->nm_layanan ?? 'domain'; @endphp
+                            @php $serviceType = strtolower($submission->jenisLayanan?->nm_layanan ?? 'domain'); @endphp
                             <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
                                 @if($serviceType === 'vps') badge-service-vps
                                 @elseif($serviceType === 'hosting') badge-service-hosting
@@ -228,15 +239,35 @@
                         <td class="px-6 py-4">
                             <div class="max-w-xs truncate text-sm text-gray-900">{{ $submission->rincian?->nm_domain ?? '-' }}</div>
                         </td>
+                        <td class="whitespace-nowrap px-6 py-4">
+                            @php $statusName = $submission->status?->nm_status ?? '-'; @endphp
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+                                @if($statusName === 'Selesai') bg-success-light text-success
+                                @elseif(str_contains($statusName, 'Ditolak')) bg-danger-light text-danger
+                                @elseif($statusName === 'Sedang Dikerjakan') bg-info-light text-info
+                                @else bg-gray-100 text-gray-800
+                                @endif">
+                                {{ $statusName }}
+                            </span>
+                        </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                            {{ $submission->create_at?->format('d M Y, H:i') ?? '-' }}
+                            {{ $submission->last_update?->format('d M Y, H:i') ?? '-' }}
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-center">
-                            <a href="{{ route('verifikator.show', $submission) }}" 
-                               class="inline-flex items-center gap-1 rounded-lg bg-myunila px-3 py-1.5 text-xs font-medium text-white transition hover:bg-myunila-dark">
-                                <x-icon name="eye" class="h-4 w-4" />
-                                Review
-                            </a>
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{{ route('eksekutor.show', $submission) }}" 
+                                   class="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-200"
+                                   title="Review Pengajuan">
+                                    <x-icon name="eye" class="h-4 w-4" />
+                                    Review
+                                </a>
+                                <a href="{{ route('eksekutor.timeline', $submission) }}" 
+                                   class="inline-flex items-center gap-1 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-purple-700"
+                                   title="Timeline Perubahan Status">
+                                    <x-icon name="clock" class="h-4 w-4" />
+                                    Timeline
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     @endforeach
@@ -250,8 +281,7 @@
         <div class="border-t border-gray-200 bg-gray-50 px-6 py-4">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 {{-- Items Per Page Selector --}}
-                <form method="GET" action="{{ route('verifikator.index') }}" id="perPageForm" class="flex items-center gap-2">
-                    {{-- Preserve all existing query params --}}
+                <form method="GET" action="{{ route('eksekutor.my-history') }}" id="perPageForm" class="flex items-center gap-2">
                     @foreach(request()->except(['per_page', 'page']) as $key => $value)
                         <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                     @endforeach
