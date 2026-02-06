@@ -1,146 +1,30 @@
+{{--
+    Sidebar Refactored — Config-Driven
+    Menu diambil dari config('navigasi') berdasarkan role user.
+    Setiap item dirender oleh x-komponen.navigasi.sidebar-item
+--}}
 @props(['active' => null])
 
 @php
     $user = Auth::user();
     $role = $user->peran->nm_peran ?? 'Pengguna';
     
-    // Tentukan menu berdasarkan role
-    $menus = [];
+    // Resolve role key untuk config navigasi
+    $roleKey = match(true) {
+        str_contains(strtolower($role), 'pimpinan')   => 'pimpinan',
+        str_contains(strtolower($role), 'admin')       => 'admin',
+        strtolower($role) === 'verifikator'            => 'verifikator',
+        strtolower($role) === 'eksekutor'              => 'eksekutor',
+        default                                        => 'pengguna',
+    };
     
-    // Menu untuk Pimpinan (Super Admin)
-    if (str_contains(strtolower($role), 'pimpinan')) {
-        $menus = [
-            [
-                'title' => 'Dashboard',
-                'route' => 'pimpinan.dashboard',
-                'icon' => 'home',
-            ],
-            [
-                'title' => 'Manajemen Pengguna',
-                'route' => 'pimpinan.users',
-                'icon' => 'users',
-            ],
-            [
-                'title' => 'Log Aktivitas Sistem',
-                'route' => 'pimpinan.activity-logs',
-                'icon' => 'clock',
-            ],
-        ];
-    }
-    
-    // Menu untuk Admin
-    elseif (str_contains(strtolower($role), 'admin')) {
-        $menus = [
-            [
-                'title' => 'Dashboard',
-                'route' => 'dashboard',
-                'icon' => 'home',
-            ],
-            [
-                'title' => 'Manajemen Pengguna',
-                'route' => 'admin.users.verification',
-                'icon' => 'user-check',
-            ],
-            [
-                'title' => 'Log Aktivitas',
-                'route' => 'admin.audit.aktivitas',
-                'icon' => 'clock',
-            ],
-            [
-                'title' => 'Log Status Pengajuan',
-                'route' => 'admin.audit.submissions',
-                'icon' => 'document-text',
-            ],
-        ];
-    }
-    
-    // Menu untuk Verifikator
-    elseif (strtolower($role) === 'verifikator') {
-        $menus = [
-            [
-                'title' => 'Dashboard',
-                'route' => 'verifikator.dashboard',
-                'icon' => 'home',
-            ],
-            [
-                'title' => 'Daftar Pengajuan',
-                'route' => 'verifikator.index',
-                'icon' => 'clipboard-list',
-            ],
-            [
-                'title' => 'Riwayat Verifikasi',
-                'route' => 'verifikator.history',
-                'icon' => 'clock',
-            ],
-            [
-                'title' => 'Log Aktivitas',
-                'route' => 'verifikator.my-history',
-                'icon' => 'document-text',
-            ],
-        ];
-    }
-    
-    // Menu untuk Eksekutor
-    elseif (strtolower($role) === 'eksekutor') {
-        $menus = [
-            [
-                'title' => 'Dashboard',
-                'route' => 'dashboard',
-                'icon' => 'home',
-            ],
-            [
-                'title' => 'Daftar Tugas',
-                'route' => 'eksekutor.index',
-                'icon' => 'clipboard-list',
-            ],
-            [
-                'title' => 'Log Perubahan Status',
-                'route' => 'eksekutor.history',
-                'icon' => 'clock',
-            ],
-            [
-                'title' => 'Log Pekerjaan',
-                'route' => 'eksekutor.my-history',
-                'icon' => 'document-text',
-            ],
-        ];
-    }
-    
-    // Menu untuk Pengguna biasa
-    else {
-        $menus = [
-            [
-                'title' => 'Dashboard',
-                'route' => 'dashboard',
-                'icon' => 'home',
-            ],
-            [
-                'title' => 'Buat Pengajuan',
-                'route' => 'submissions.create',
-                'icon' => 'plus-circle',
-            ],
-            [
-                'title' => 'Daftar Pengajuan',
-                'route' => 'submissions.index',
-                'icon' => 'clipboard-list',
-            ],
-            [
-                'title' => 'Profil Saya',
-                'route' => null, // Placeholder - not yet implemented
-                'icon' => 'user',
-            ],
-        ];
-    }
-    
-    // Helper untuk cek active
-    $isActive = fn($route) => request()->routeIs($route) || request()->routeIs($route . '.*');
+    $menus = config("navigasi.{$roleKey}", []);
 @endphp
 
 <div {{ $attributes->merge(['class' => 'flex h-screen flex-col bg-white border-r border-gray-200']) }}>
     {{-- Logo & Brand --}}
     <div class="flex h-16 items-center border-b border-gray-200 px-6">
         <a href="{{ route('home') }}" class="flex items-center gap-3 transition hover:opacity-80">
-            {{-- Logo Unila Resmi --}}
             <img src="{{ asset('images/logo-unila.png') }}" alt="Logo Unila" class="h-10 w-10 rounded-lg shadow-md">
             <div>
                 <h1 class="text-lg font-bold text-myunila">DomainTIK</h1>
@@ -149,33 +33,16 @@
         </a>
     </div>
 
-    {{-- Navigation Menu --}}
+    {{-- Navigation Menu (config-driven) --}}
     <nav class="flex-1 overflow-y-auto px-3 py-4">
         <div class="space-y-1">
             @foreach($menus as $menu)
-                @php
-                    $routeExists = $menu['route'] && \Illuminate\Support\Facades\Route::has($menu['route']);
-                    $active = $menu['route'] ? $isActive($menu['route']) : false;
-                @endphp
-                
-                @if($routeExists)
-                    <a href="{{ route($menu['route']) }}" 
-                       class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition
-                              {{ $active 
-                                  ? 'bg-myunila-50 text-myunila' 
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-myunila' }}">
-                        <x-icon :name="$menu['icon']" class="h-5 w-5 flex-shrink-0 
-                            {{ $active ? 'text-myunila' : 'text-gray-400 group-hover:text-myunila' }}" />
-                        <span>{{ $menu['title'] }}</span>
-                    </a>
-                @else
-                    {{-- Placeholder untuk route yang belum dibuat --}}
-                    <div class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 cursor-not-allowed opacity-50">
-                        <x-icon :name="$menu['icon']" class="h-5 w-5 flex-shrink-0" />
-                        <span>{{ $menu['title'] }}</span>
-                        <span class="ml-auto text-xs bg-gray-100 px-2 py-0.5 rounded-full">Soon</span>
-                    </div>
-                @endif
+                <x-komponen.navigasi.sidebar-item 
+                    :route="$menu['route']" 
+                    :judul="$menu['judul']" 
+                    :ikon="$menu['ikon']"
+                    :badge="$menu['badge_key'] ?? null"
+                    :badgeColor="$menu['badge_color'] ?? 'warning'" />
             @endforeach
         </div>
     </nav>

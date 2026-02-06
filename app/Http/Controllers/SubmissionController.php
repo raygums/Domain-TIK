@@ -47,7 +47,7 @@ class SubmissionController extends Controller
         // Get current user data
         $user = Auth::user();
 
-        return view('submissions.create', compact('type', 'categories', 'user'));
+        return view('pengajuan.buat', compact('type', 'categories', 'user'));
     }
 
     /**
