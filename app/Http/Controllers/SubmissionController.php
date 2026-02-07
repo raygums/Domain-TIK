@@ -455,9 +455,9 @@ class SubmissionController extends Controller
             return;
         }
         
-        // Admin, Verifikator, Eksekutor can access all
+        // Admin, Pimpinan, Verifikator, Eksekutor can access all
         $userRole = $user->peran?->nm_peran ?? '';
-        if (in_array(strtolower($userRole), ['admin', 'verifikator', 'eksekutor'])) {
+        if (in_array(strtolower($userRole), ['admin', 'administrator', 'pimpinan', 'verifikator', 'eksekutor'])) {
             return;
         }
         
@@ -514,5 +514,99 @@ class SubmissionController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Check domain availability (API endpoint)
+     */
+    public function checkDomainAvailability(Request $request)
+    {
+        $domain = $request->query('domain');
+        
+        if (empty($domain) || strlen($domain) < 2) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Domain minimal 2 karakter'
+            ]);
+        }
+
+        // Check if domain already exists in submissions
+        $exists = SubmissionDetail::where('nm_domain', 'ILIKE', $domain . '%')
+            ->orWhere('nm_domain', 'ILIKE', $domain . '.unila.ac.id')
+            ->exists();
+
+        return response()->json([
+            'available' => !$exists,
+            'domain' => $domain,
+            'message' => $exists ? 'Domain sudah digunakan' : 'Domain tersedia'
+        ]);
+    }
+
+    /**
+     * Get submission data by ticket number for auto-fill (API endpoint)
+     */
+    public function getSubmissionByTicket(string $ticketNumber)
+    {
+        $submission = Submission::with(['unitKerja', 'rincian', 'jenisLayanan', 'pengguna'])
+            ->where('no_tiket', $ticketNumber)
+            ->first();
+
+        if (!$submission) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tiket tidak ditemukan'
+            ], 404);
+        }
+
+        // Parse keterangan_keperluan JSON
+        $keterangan = json_decode($submission->rincian?->keterangan_keperluan ?? '{}', true);
+
+        // Return data for auto-fill
+        return response()->json([
+            'success' => true,
+            'data' => [
+                // Service info
+                'service_type' => $submission->jenisLayanan?->nm_layanan ?? 'domain',
+                'domain' => $submission->rincian?->nm_domain ?? '',
+                
+                // Organization info
+                'kategori_pemohon' => $keterangan['kategori_pemohon'] ?? '',
+                'nama_organisasi' => $keterangan['nama_organisasi'] ?? '',
+                
+                // Admin contact
+                'admin_name' => $keterangan['admin']['name'] ?? '',
+                'admin_position' => $keterangan['admin']['position'] ?? '',
+                'admin_nip' => $keterangan['admin']['nip'] ?? '',
+                'admin_email' => $keterangan['admin']['email'] ?? '',
+                'admin_phone' => $keterangan['admin']['phone'] ?? '',
+                'admin_telepon_kantor' => $keterangan['admin']['telepon_kantor'] ?? '',
+                'admin_alamat_kantor' => $keterangan['admin']['alamat_kantor'] ?? '',
+                'admin_alamat_rumah' => $keterangan['admin']['alamat_rumah'] ?? '',
+                'kategori_admin' => $keterangan['kategori_admin'] ?? '',
+                
+                // Tech contact
+                'tech_name' => $keterangan['tech']['name'] ?? '',
+                'tech_nip' => $keterangan['tech']['nip'] ?? '',
+                'tech_nik' => $keterangan['tech']['nik'] ?? '',
+                'tech_email' => $keterangan['tech']['email'] ?? '',
+                'tech_phone' => $keterangan['tech']['phone'] ?? '',
+                'tech_alamat_kantor' => $keterangan['tech']['alamat_kantor'] ?? '',
+                'tech_alamat_rumah' => $keterangan['tech']['alamat_rumah'] ?? '',
+                'kategori_tech' => $keterangan['kategori_tech'] ?? '',
+                
+                // VPS specs (if applicable)
+                'vps_cpu' => $keterangan['vps']['cpu'] ?? '',
+                'vps_ram' => $keterangan['vps']['ram'] ?? '',
+                'vps_storage' => $keterangan['vps']['storage'] ?? '',
+                'vps_os' => $keterangan['vps']['os'] ?? '',
+                'vps_purpose' => $keterangan['vps']['purpose'] ?? '',
+                
+                // Hosting specs (if applicable)
+                'hosting_quota' => $keterangan['hosting']['quota'] ?? '',
+                
+                // Metadata
+                'expired_date' => $submission->rincian?->tgl_expired ?? '',
+            ]
+        ]);
     }
 }

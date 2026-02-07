@@ -92,14 +92,20 @@ class DatabaseSeeder extends Seeder
         }
 
         // ==========================================================
-        // 5. PERAN (ROLES) - 4 Role Utama
+        // 5. PERAN (ROLES) - 5 Role Utama
         // ==========================================================
+        $rolePimpinanId = Str::uuid();
         $roleAdminId = Str::uuid();
         $roleVerifikatorId = Str::uuid();
         $roleEksekutorId = Str::uuid();
         $rolePenggunaId = Str::uuid();
 
         DB::table('akun.peran')->insert([
+            [
+                'UUID' => $rolePimpinanId,
+                'nm_peran' => 'Pimpinan',
+                'a_aktif' => true
+            ],
             [
                 'UUID' => $roleAdminId,
                 'nm_peran' => 'Administrator',
@@ -144,46 +150,19 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // ==========================================================
-        // 7. PENGGUNA DEFAULT (Admin, Verifikator, Eksekutor)
+        // 7. PENGGUNA - Seeded melalui seeder terpisah
         // ==========================================================
-        
-        // Super Admin
-        DB::table('akun.pengguna')->insert([
-            'UUID' => Str::uuid(),
-            'nm' => 'Super Admin',
-            'usn' => 'admin',
-            'email' => 'admin@unila.ac.id',
-            'ktp' => '1871000000000001',
-            'tgl_lahir' => '1990-01-01',
-            'kata_sandi' => Hash::make('password'),
-            'peran_uuid' => $roleAdminId,
-            'a_aktif' => true
-        ]);
-
-        // Verifikator - Siti Nurhaliza
-        DB::table('akun.pengguna')->insert([
-            'UUID' => Str::uuid(),
-            'nm' => 'Siti Nurhaliza',
-            'usn' => '198702152011012002',
-            'email' => 'siti.nurhaliza@unila.ac.id',
-            'ktp' => '1871000000000002',
-            'tgl_lahir' => '1987-02-15',
-            'kata_sandi' => Hash::make('password'),
-            'peran_uuid' => $roleVerifikatorId,
-            'a_aktif' => true
-        ]);
-
-        // Eksekutor - Andi Prasetyo
-        DB::table('akun.pengguna')->insert([
-            'UUID' => Str::uuid(),
-            'nm' => 'Andi Prasetyo',
-            'usn' => '199003202015011003',
-            'email' => 'andi.prasetyo@unila.ac.id',
-            'ktp' => '1871000000000003',
-            'tgl_lahir' => '1990-03-20',
-            'kata_sandi' => Hash::make('password'),
-            'peran_uuid' => $roleEksekutorId,
-            'a_aktif' => true
+        $this->call([
+            // User seeders - dijalankan pertama untuk membuat users
+            AdminSeeder::class,        // 5 Admin users
+            VerifikatorSeeder::class,  // 5 Verifikator users
+            EksekutorSeeder::class,    // 5 Eksekutor users
+            PimpinanSeeder::class,     // 5 Pimpinan users
+            MahasiswaSeeder::class,    // 50 Mahasiswa users (tanpa SSO)
+            
+            // Testing data seeders - dijalankan setelah users dibuat
+            AdminTestingSeeder::class, // Submissions, SubmissionLogs, dan LoginLogs
+            LoginHistorySeeder::class, // Additional login history tracking data
         ]);
     }
 }

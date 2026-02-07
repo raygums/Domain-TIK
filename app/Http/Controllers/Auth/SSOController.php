@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Peran;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -12,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 
 class SSOController extends Controller
 {
+    public function __construct(
+        protected AuditLogService $auditLogService
+    ) {}
     /**
      * SSO Base URL
      */
@@ -75,6 +79,15 @@ class SSOController extends Controller
                 'ip' => $request->ip(),
                 'query' => $request->query(),
             ]);
+
+            // Record failed SSO login: No token
+            $this->auditLogService->recordLoginLog(
+                userUuid: null,
+                status: 'GAGAL_SSO',
+                request: $request,
+                keterangan: 'SSO callback: Token tidak ditemukan'
+            );
+
             return redirect()->route('login')
                 ->with('error', 'Token SSO tidak ditemukan. Silakan coba lagi.');
         }
@@ -92,6 +105,15 @@ class SSOController extends Controller
                 'ip' => $request->ip(),
                 'token_preview' => substr($token, 0, 50) . '...',
             ]);
+
+            // Record failed SSO login: Invalid token
+            $this->auditLogService->recordLoginLog(
+                userUuid: null,
+                status: 'GAGAL_SSO',
+                request: $request,
+                keterangan: 'SSO authentication failed: Token tidak valid atau kadaluarsa'
+            );
+
             return redirect()->route('login')
                 ->with('error', 'Token SSO tidak valid atau sudah kadaluarsa.');
         }
@@ -108,6 +130,14 @@ class SSOController extends Controller
 
             // Login user
             Auth::login($user, true); // Remember me = true
+
+            // Record successful SSO login
+            $this->auditLogService->recordLoginLog(
+                userUuid: $user->UUID,
+                status: 'BERHASIL',
+                request: $request,
+                keterangan: "Login berhasil via SSO Unila - SSO ID: {$payload->id_pengguna}"
+            );
 
             // Log successful login
             Log::info('SSO Login Success', [
@@ -126,6 +156,15 @@ class SSOController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // Record failed SSO login: Exception
+            $this->auditLogService->recordLoginLog(
+                userUuid: null,
+                status: 'GAGAL_SSO',
+                request: $request,
+                keterangan: "SSO authentication failed: {$e->getMessage()}"
+            );
+
             Log::error('SSO Callback Error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -138,15 +177,27 @@ class SSOController extends Controller
     }
 
     /**
-     * Find existing user or create new one from SSO payload
+     * Find existing user or create new one from SSO payload.
+     * 
+     * SSO-Gate Implementation:
+     * - User baru: a_aktif = FALSE (default inactive, butuh approval Verifikator)
+     * - User existing: UPDATE data dari SSO, KEEP status a_aktif yang sudah ada
+     * 
+     * Strategi Pencarian (Cascade Lookup):
+     * 1. By sso_id (primary identifier)
+     * 2. By username (usn) - untuk link existing account
+     * 3. By email - fallback identifier
+     * 
+     * Semua operasi database menggunakan transaction untuk integritas data.
+     * Transaction di-handle oleh caller (handleCallback method).
      */
     protected function findOrCreateUser(object $payload): ?User
     {
-        // Try to find user by SSO ID first
+        // Try to find user by SSO ID first (paling reliable)
         $user = User::where('sso_id', $payload->id_pengguna)->first();
 
         if ($user) {
-            // Update user data from SSO (mapping ke kolom database yang benar)
+            // User existing: update data dari SSO, PRESERVE a_aktif status
             $user->update([
                 'nm' => $payload->nm_pengguna,
                 'email' => $payload->email,
@@ -154,15 +205,23 @@ class SSOController extends Controller
                 'id_pd' => $payload->id_pd_pengguna,
                 'last_login_at' => now(),
                 'last_login_ip' => request()->ip(),
+                'last_update' => now(),
             ]);
+            
+            Log::info('SSO User Updated', [
+                'user_uuid' => $user->UUID,
+                'sso_id' => $user->sso_id,
+                'a_aktif' => $user->a_aktif,
+            ]);
+            
             return $user;
         }
 
-        // Try to find by username (usn)
+        // Try to find by username (usn) - untuk linking existing account
         $user = User::where('usn', $payload->username)->first();
 
         if ($user) {
-            // Link existing user to SSO
+            // Link existing local account ke SSO, PRESERVE a_aktif
             $user->update([
                 'sso_id' => $payload->id_pengguna,
                 'nm' => $payload->nm_pengguna,
@@ -171,15 +230,23 @@ class SSOController extends Controller
                 'id_pd' => $payload->id_pd_pengguna,
                 'last_login_at' => now(),
                 'last_login_ip' => request()->ip(),
+                'last_update' => now(),
             ]);
+            
+            Log::info('SSO Linked to Existing User (by username)', [
+                'user_uuid' => $user->UUID,
+                'sso_id' => $user->sso_id,
+                'a_aktif' => $user->a_aktif,
+            ]);
+            
             return $user;
         }
 
-        // Try to find by email
+        // Try to find by email - fallback identifier
         $user = User::where('email', $payload->email)->first();
 
         if ($user) {
-            // Link existing user to SSO
+            // Link existing account by email, PRESERVE a_aktif
             $user->update([
                 'sso_id' => $payload->id_pengguna,
                 'nm' => $payload->nm_pengguna,
@@ -187,12 +254,20 @@ class SSOController extends Controller
                 'id_pd' => $payload->id_pd_pengguna,
                 'last_login_at' => now(),
                 'last_login_ip' => request()->ip(),
+                'last_update' => now(),
             ]);
+            
+            Log::info('SSO Linked to Existing User (by email)', [
+                'user_uuid' => $user->UUID,
+                'sso_id' => $user->sso_id,
+                'a_aktif' => $user->a_aktif,
+            ]);
+            
             return $user;
         }
 
-        // Create new user
-        // Determine role based on SSO peran_pengguna
+        // Create new user - CRITICAL: a_aktif = FALSE (SSO-Gate)
+        // User baru harus di-approve oleh Verifikator sebelum bisa akses fitur
         $peranUuid = $this->determineRole($payload->peran_pengguna);
 
         $user = User::create([
@@ -204,9 +279,20 @@ class SSOController extends Controller
             'id_sdm' => $payload->id_sdm_pengguna,
             'id_pd' => $payload->id_pd_pengguna,
             'peran_uuid' => $peranUuid,
-            'a_aktif' => true,
+            'a_aktif' => false,                          // DEFAULT: INACTIVE untuk user baru (SSO-Gate)
             'last_login_at' => now(),
             'last_login_ip' => request()->ip(),
+            'create_at' => now(),
+            'id_creator' => null,                        // Self-registered via SSO
+        ]);
+
+        Log::info('New SSO User Created (INACTIVE)', [
+            'user_uuid' => $user->UUID,
+            'sso_id' => $user->sso_id,
+            'usn' => $user->usn,
+            'email' => $user->email,
+            'a_aktif' => $user->a_aktif,
+            'note' => 'User requires Verifikator approval',
         ]);
 
         return $user;
@@ -233,9 +319,15 @@ class SSOController extends Controller
 
     /**
      * Logout user dari aplikasi
-     * Note: SSO akses.unila.ac.id tidak menyediakan endpoint logout public,
-     * jadi user hanya logout dari aplikasi ini. Session SSO di browser
-     * akan tetap aktif sampai expired atau user logout manual dari akses.unila.ac.id
+     * 
+     * Strategy:
+     * 1. Logout dari Laravel Auth
+     * 2. Destroy semua session data
+     * 3. Hapus semua cookies (termasuk laravel_session, XSRF-TOKEN, dll)
+     * 4. Set flag di session untuk force re-login di SSO saat login berikutnya
+     * 
+     * Note: SSO Unila tidak support redirect_uri di logout endpoint,
+     * jadi kita hanya logout dari aplikasi lokal dan force re-login saat masuk lagi
      */
     public function logout(Request $request)
     {
@@ -249,12 +341,38 @@ class SSOController extends Controller
             ]);
         }
 
+        // Logout dari Laravel Auth
         Auth::logout();
+        
+        // Hapus semua data session
+        session()->flush();
+        
+        // Invalidate session ID  
         $request->session()->invalidate();
-        $request->session()->regenerateToken();
 
-        return redirect()->route('home')
+        // Buat response dengan redirect
+        $response = redirect()->route('home')
             ->with('success', 'Anda telah keluar dari aplikasi.');
+        
+        // Hapus cookies yang relevan
+        $cookiesToForget = [
+            'laravel_session',
+            'XSRF-TOKEN', 
+            'remember_web_' . sha1(get_class(Auth::guard()) . Auth::getRecallerName()),
+        ];
+        
+        foreach ($cookiesToForget as $cookieName) {
+            $response->withCookie(cookie()->forget($cookieName));
+        }
+        
+        // Juga coba hapus semua cookies dari request
+        foreach ($request->cookies->keys() as $cookieName) {
+            $response->withCookie(cookie()->forget($cookieName));
+        }
+
+        Log::info('User Logout Complete - Session & Cookies Destroyed');
+
+        return $response;
     }
 
     /**

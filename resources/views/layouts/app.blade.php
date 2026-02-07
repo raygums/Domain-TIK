@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>@yield('title', 'Domaintik') - Layanan Domain & Hosting TIK Unila</title>
+    <title>@yield('title', 'DomainTIK') - UPA TIK Universitas Lampung</title>
     
     {{-- Favicon --}}
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+    <link rel="icon" href="{{ asset('images/logo-unila.png') }}" type="image/png">
     
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -29,7 +29,7 @@
                     <img src="{{ asset('images/logo-unila.png') }}" alt="Logo Unila" class="h-12 w-auto">
                     <div class="border-l border-gray-300 pl-3">
                         <span class="text-xl font-bold text-gray-900">Domain<span class="text-myunila">TIK</span></span>
-                        <p class="text-xs text-gray-500">Universitas Lampung</p>
+                        <p class="text-xs text-gray-500">UPA TIK Universitas Lampung</p>
                     </div>
                 </a>
                 

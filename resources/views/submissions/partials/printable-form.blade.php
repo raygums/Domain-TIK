@@ -27,7 +27,7 @@
     {{-- Title --}}
     <div class="mb-6 text-center">
         <h1 class="text-lg font-bold uppercase">Formulir Permohonan</h1>
-        <h2 class="font-bold">Layanan {{ ucfirst($submission->jenisLayanan?->nm_layanan ?? 'Domain') }} (.unila.ac.id)</h2>
+        <h2 class="font-bold">Layanan {{ $submission->jenisLayanan?->nm_layanan === 'vps' ? 'VPS' : ucfirst($submission->jenisLayanan?->nm_layanan ?? 'Domain') }} (.unila.ac.id)</h2>
     </div>
 
     {{-- Section A: Data Pemohon --}}
@@ -83,7 +83,7 @@
             <tr>
                 <td class="w-1/3 border border-gray-400 px-2 py-1.5 font-medium">Jenis Layanan</td>
                 <td class="border border-gray-400 px-2 py-1.5">
-                    {{ ucfirst($submission->jenisLayanan?->nm_layanan ?? 'Domain') }}
+                    {{ $submission->jenisLayanan?->nm_layanan === 'vps' ? 'VPS' : ucfirst($submission->jenisLayanan?->nm_layanan ?? 'Domain') }}
                 </td>
             </tr>
             <tr>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SSOController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExecutionController;
@@ -37,8 +38,15 @@ Route::get('/auth/sso/callback', [SSOController::class, 'handleCallback'])->name
 // GUEST ROUTES (Hanya untuk yang belum login)
 // ==========================================
 Route::middleware('guest')->group(function () {
-    // Login langsung redirect ke SSO
-    Route::get('/login', [SSOController::class, 'redirectToSSO'])->name('login');
+    // Menampilkan halaman login dengan dua opsi: kredensial lokal dan SSO
+    Route::get('/login', [AuthController::class, 'index'])->name('login');
+    
+    // Proses login dengan kredensial lokal (username & password)
+    Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+
+    // --- Registrasi User Mandiri ---
+    Route::get('/register', [RegisterController::class, 'create'])->name('register');
+    Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 });
 
 
@@ -53,8 +61,8 @@ Route::middleware('auth')->group(function () {
     // --- Dashboard (setelah login, redirect berdasarkan role) ---
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // --- Fitur Pengajuan ---
-    Route::prefix('pengajuan')->name('submissions.')->group(function () {
+    // --- Fitur Pengajuan (Membutuhkan akun aktif) ---
+    Route::middleware('active')->prefix('pengajuan')->name('submissions.')->group(function () {
         // Form & Store
         Route::get('/buat', [SubmissionController::class, 'create'])->name('create');
         Route::post('/', [SubmissionController::class, 'store'])->name('store');
@@ -75,16 +83,30 @@ Route::middleware('auth')->group(function () {
 
     // --- Admin Routes ---
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', [DashboardController::class, 'adminDashboard'])->name('dashboard');
-        Route::get('/users', function () {
-            return "Halaman Manajemen User (Admin Only)";
-        })->name('users');
+        // Dashboard Admin
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        
+        // User Verification & Management
+        Route::get('/users/verification', [\App\Http\Controllers\Admin\AdminController::class, 'userVerification'])->name('users.verification');
+        Route::post('/users/{uuid}/toggle-status', [\App\Http\Controllers\Admin\AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
+        Route::post('/users/bulk-activate', [\App\Http\Controllers\Admin\AdminController::class, 'bulkActivate'])->name('users.bulk-activate');
+        Route::get('/users/never-logged-in', [\App\Http\Controllers\Admin\AdminController::class, 'usersNeverLoggedIn'])->name('users.never-logged-in');
+        
+        // Audit Logs (Activity: Login & Submission)
+        Route::get('/audit/aktivitas', [\App\Http\Controllers\Admin\AuditLogController::class, 'loginLogs'])->name('audit.aktivitas');
+        Route::get('/audit/submissions', [\App\Http\Controllers\Admin\AuditLogController::class, 'submissionLogs'])->name('audit.submissions');
+        Route::get('/audit/user/{uuid}', [\App\Http\Controllers\Admin\AuditLogController::class, 'userDetail'])->name('audit.user-detail');
     });
 
     // --- Verifikator Routes ---
     Route::middleware('role:verifikator')->prefix('verifikator')->name('verifikator.')->group(function () {
-        Route::get('/', [VerificationController::class, 'index'])->name('index');
-        Route::get('/riwayat', [VerificationController::class, 'history'])->name('history');
+        // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'verifikator'])->name('dashboard');
+        
+        // Pengajuan Verification
+        Route::get('/daftar-pengajuan', [VerificationController::class, 'index'])->name('index');
+        Route::get('/riwayat-verifikasi', [VerificationController::class, 'history'])->name('history');
+        Route::get('/log-aktivitas', [VerificationController::class, 'myHistory'])->name('my-history');
         Route::get('/{submission}', [VerificationController::class, 'show'])->name('show');
         Route::post('/{submission}/approve', [VerificationController::class, 'approve'])->name('approve');
         Route::post('/{submission}/reject', [VerificationController::class, 'reject'])->name('reject');
@@ -94,10 +116,30 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:eksekutor')->prefix('eksekutor')->name('eksekutor.')->group(function () {
         Route::get('/', [ExecutionController::class, 'index'])->name('index');
         Route::get('/riwayat', [ExecutionController::class, 'history'])->name('history');
+        Route::get('/log-pekerjaan', [ExecutionController::class, 'myHistory'])->name('my-history');
+        Route::get('/timeline/{submission}', [ExecutionController::class, 'timeline'])->name('timeline');
         Route::get('/{submission}', [ExecutionController::class, 'show'])->name('show');
         Route::post('/{submission}/accept', [ExecutionController::class, 'accept'])->name('accept');
         Route::post('/{submission}/complete', [ExecutionController::class, 'complete'])->name('complete');
         Route::post('/{submission}/reject', [ExecutionController::class, 'reject'])->name('reject');
+    });
+
+    // --- Pimpinan Routes ---
+    Route::middleware('role:pimpinan')->prefix('pimpinan')->name('pimpinan.')->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [\App\Http\Controllers\Pimpinan\PimpinanController::class, 'dashboard'])->name('dashboard');
+        
+        // User Management (All Roles)
+        Route::get('/users', [\App\Http\Controllers\Pimpinan\PimpinanController::class, 'users'])->name('users');
+        Route::get('/users/{uuid}', [\App\Http\Controllers\Pimpinan\PimpinanController::class, 'userDetail'])->name('user-detail');
+        Route::post('/users/{uuid}/toggle-status', [\App\Http\Controllers\Pimpinan\PimpinanController::class, 'toggleUserStatus'])->name('users.toggle-status');
+        Route::post('/users/{uuid}/change-role', [\App\Http\Controllers\Pimpinan\PimpinanController::class, 'changeUserRole'])->name('users.change-role');
+        Route::post('/users/bulk-activate', [\App\Http\Controllers\Pimpinan\PimpinanController::class, 'bulkActivate'])->name('users.bulk-activate');
+        Route::post('/users/bulk-deactivate', [\App\Http\Controllers\Pimpinan\PimpinanController::class, 'bulkDeactivate'])->name('users.bulk-deactivate');
+        
+        // Activity Logs
+        Route::get('/activity-logs', [\App\Http\Controllers\Pimpinan\PimpinanController::class, 'activityLogs'])->name('activity-logs');
+        Route::get('/activity-logs/{uuid}', [\App\Http\Controllers\Pimpinan\PimpinanController::class, 'activityDetail'])->name('activity-detail');
     });
 
 });

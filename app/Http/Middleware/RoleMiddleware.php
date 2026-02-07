@@ -23,18 +23,31 @@ class RoleMiddleware
 
         $user = Auth::user();
 
-        // 2. Ambil role user saat ini
-        // Kita handle support untuk Enum (Laravel 11/12 Casting) atau String biasa
-        $userRole = $user->role instanceof \BackedEnum ? $user->role->value : $user->role;
+        // 2. Ambil role user dari relasi peran
+        // User model punya accessor getRoleAttribute() yang return lowercase nm_peran
+        $userRole = $user->role; // Ini akan call accessor getRoleAttribute()
 
-        // 3. Admin/Super Admin bisa akses semua route
-        if ($userRole === 'admin') {
+        // 3. Pimpinan (Super Admin) bisa akses semua route
+        if (str_contains(strtolower($userRole), 'pimpinan')) {
             return $next($request);
         }
 
-        // 4. Cek apakah role user termasuk dalam role yang diizinkan route ini
+        // 4. Admin bisa akses semua route kecuali yang khusus pimpinan
+        // Check dengan str_contains karena role bisa "Administrator" atau "Admin"
+        if (str_contains(strtolower($userRole), 'admin')) {
+            // Admin tidak bisa akses halaman khusus pimpinan
+            if (in_array('pimpinan', array_map('strtolower', $roles)) && count($roles) === 1) {
+                abort(403, 'Akses ditolak. Anda tidak memiliki izin.');
+            }
+            return $next($request);
+        }
+
+        // 5. Cek apakah role user termasuk dalam role yang diizinkan route ini
         // Contoh penggunaan di route: middleware('role:admin,verifikator')
-        if (in_array($userRole, $roles)) {
+        // Normalize roles untuk case-insensitive comparison
+        $normalizedRoles = array_map('strtolower', $roles);
+        
+        if (in_array(strtolower($userRole), $normalizedRoles)) {
             return $next($request);
         }
 
