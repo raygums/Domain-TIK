@@ -34,6 +34,11 @@ class SubmissionController extends Controller
      */
     public function create(Request $request)
     {
+        // If no type parameter, show service selection page
+        if (!$request->has('type')) {
+            return view('submissions.select-service');
+        }
+
         $type = $request->query('type', 'domain'); // domain, hosting, vps
         
         // Validate type
