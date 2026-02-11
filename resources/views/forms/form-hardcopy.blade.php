@@ -682,7 +682,7 @@
                 <li><strong>Form ini WAJIB ditandatangani</strong> oleh atasan pemohon (minimal Kajur/Kaprodi untuk unit akademik atau Kabag untuk unit non-akademik)</li>
                 <li>Scan form yang sudah ditandatangani dengan format <strong>PDF</strong> dan upload ke sistem melalui website</li>
                 <li>Proses verifikasi dilakukan oleh tim TIK dalam waktu <strong>1-3 hari kerja</strong></li>
-                <li>Status pengajuan dapat dipantau secara real-time melalui <strong>domaintik.unila.ac.id</strong> menggunakan nomor tiket</li>
+                <li>Status pengajuan dapat dipantau secara real-time melalui <strong>sidevtik.unila.ac.id</strong> menggunakan nomor tiket</li>
                 <li>Untuk pengajuan VPS dan Hosting, mohon sertakan <strong>surat resmi</strong> dari unit kerja sebagai lampiran pendukung</li>
                 <li>Perpanjangan layanan mohon diajukan minimal <strong>7 hari sebelum expired</strong></li>
             </ul>
@@ -690,7 +690,7 @@
 
         {{-- Footer --}}
         <div class="footer">
-            <p>Dokumen ini digenerate secara otomatis oleh sistem DomainTIK - UPA TIK Universitas Lampung</p>
+            <p>Dokumen ini digenerate secara otomatis oleh SiDev - UPA TIK Universitas Lampung</p>
             <p>{{ config('app.url') }} | Tiket: {{ $submission->no_tiket }}</p>
         </div>
     </div>

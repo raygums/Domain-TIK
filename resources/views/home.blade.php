@@ -25,7 +25,7 @@
                 <h1 class="mb-4 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
                     Selamat Datang di
                     <span class="block text-myunila">
-                        DomainTIK
+                        SiDevTIK
                     </span>
                 </h1>
                 
@@ -35,7 +35,7 @@
                         <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-myunila-400 opacity-75"></span>
                         <span class="relative inline-flex h-2 w-2 rounded-full bg-myunila"></span>
                     </span>
-                    Sistem Layanan Digital UPA TIK Universitas Lampung
+                    Sistem Domain dan Server UPA TIK Universitas Lampung
                 </div>
                 
                 {{-- Description --}}

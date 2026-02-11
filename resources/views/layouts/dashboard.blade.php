@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Dashboard') - DomainTIK</title>
+    <title>@yield('title', 'Dashboard') - SiDevTIK</title>
     
     {{-- Favicon --}}
     <link rel="icon" href="{{ asset('images/logo-unila.png') }}" type="image/png">
@@ -32,7 +32,7 @@
                             class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
                             <x-icon name="bars-3" class="h-6 w-6" />
                         </button>
-                        <h1 class="text-lg font-bold text-myunila">DomainTIK</h1>
+                        <h1 class="text-lg font-bold text-myunila">SiDevTIK</h1>
                     </div>
                     
                     <div class="flex items-center gap-2">

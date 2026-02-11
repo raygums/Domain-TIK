@@ -143,7 +143,7 @@
             {{-- Logo Unila Resmi --}}
             <img src="{{ asset('images/logo-unila.png') }}" alt="Logo Unila" class="h-10 w-10 rounded-lg shadow-md">
             <div>
-                <h1 class="text-lg font-bold text-myunila">DomainTIK</h1>
+                <h1 class="text-lg font-bold text-myunila">SiDevTIK</h1>
                 <p class="text-xs text-gray-500">UPA TIK Universitas Lampung</p>
             </div>
         </a>

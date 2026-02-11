@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>{{ $title ?? 'Login' }} - DomainTIK</title>
+    <title>{{ $title ?? 'Login' }} - SiDevTIK</title>
     
     {{-- Favicon --}}
     <link rel="icon" href="{{ asset('images/logo-unila.png') }}" type="image/png">
@@ -39,7 +39,7 @@
                 </div>
 
                 <h1 class="text-4xl font-bold leading-tight text-white">
-                    DOMAINTIK
+                    SiDevTIK
                 </h1>
                 
                 <p class="text-lg text-myunila-100">
