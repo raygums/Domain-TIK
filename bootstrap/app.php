@@ -19,7 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Trust all proxies in production (behind Nginx reverse proxy)
         if (app()->environment('production')) {
-            $middleware->trustProxies(at: '*', headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_ALL);
+            $middleware->trustProxies(
+                at: '*',
+                headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
+                         \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |
+                         \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
+                         \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO |
+                         \Illuminate\Http\Request::HEADER_X_FORWARDED_PREFIX
+            );
         }
     })
     ->withExceptions(function (Exceptions $exceptions) {
