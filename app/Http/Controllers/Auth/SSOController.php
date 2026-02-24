@@ -17,16 +17,12 @@ class SSOController extends Controller
         protected AuditLogService $auditLogService
     ) {}
     /**
-     * SSO Base URL
-     */
-    protected string $ssoBaseUrl = 'https://akses.unila.ac.id/api/live/v1/auth';
-
-    /**
      * Redirect user to SSO login page
      */
     public function redirectToSSO(Request $request)
     {
         $appKey = config('services.sso.app_key');
+        $baseUrl = config('services.sso.base_url', 'https://akses.unila.ac.id/api/live/v1/auth');
         
         Log::info('SSO Redirect Initiated', [
             'app_key' => $appKey ? 'SET ('. strlen($appKey) .' chars)' : 'NOT SET',
@@ -51,7 +47,7 @@ class SSOController extends Controller
             $params['prompt'] = 'login'; // atau 'force' tergantung SSO server
         }
         
-        $ssoUrl = "{$this->ssoBaseUrl}/login/sso?" . http_build_query($params);
+        $ssoUrl = "{$baseUrl}/login/sso?" . http_build_query($params);
 
         Log::info('SSO Redirecting to', [
             'callback_url' => $callbackUrl,

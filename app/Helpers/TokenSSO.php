@@ -9,7 +9,8 @@ if (!function_exists('TokenSSO')) {
      */
     function TokenSSO($jwt)
     {
-        $secret = env('SSO_JWT_SECRET', 'secret');
+        // Gunakan config() bukan env() agar bisa baca cached config di production
+        $secret = config('services.sso.jwt_secret', 'secret');
         $tokenParts = explode('.', $jwt);
 
         if (count($tokenParts) !== 3) {
