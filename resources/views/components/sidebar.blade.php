@@ -192,13 +192,10 @@
             </div>
         </div>
         
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" 
-                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50">
-                <x-icon name="logout" class="h-5 w-5" />
-                <span>Keluar</span>
-            </button>
-        </form>
+        <a href="{{ route('logout.get') }}" 
+           class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50">
+            <x-icon name="logout" class="h-5 w-5" />
+            <span>Keluar</span>
+        </a>
     </div>
 </div>

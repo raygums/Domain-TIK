@@ -56,12 +56,9 @@
                                 {{ strtoupper(substr(Auth::user()->nm ?? Auth::user()->name ?? 'U', 0, 1)) }}
                             </div>
                         </div>
-                        <form action="{{ route('logout') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-error">
-                                Keluar
-                            </button>
-                        </form>
+                        <a href="{{ route('logout.get') }}" class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-error">
+                            Keluar
+                        </a>
                     @else
                         {{-- Tombol Login SSO untuk guest --}}
                         <a href="{{ route('login') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-unila px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-myunila/30 transition hover:shadow-xl hover:shadow-myunila/40">
@@ -77,14 +74,14 @@
     </nav>
     
     {{-- Flash Messages --}}
-    @if(session('success'))
+    @if(session('success') || request()->query('logout') == '1')
         <div class="mx-auto mt-4 max-w-7xl px-4">
             <div class="rounded-lg border border-success/30 bg-success-light p-4 text-success">
                 <div class="flex items-center gap-2">
                     <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                     </svg>
-                    {{ session('success') }}
+                    {{ session('success') ?? 'Anda telah keluar dari aplikasi.' }}
                 </div>
             </div>
         </div>

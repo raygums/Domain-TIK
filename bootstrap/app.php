@@ -30,5 +30,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Handle session/database errors during response
+        // Ini mencegah layar putih saat StartSession middleware gagal save
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $e, \Illuminate\Http\Request $request) {
+            // Jika error terjadi pada halaman logout, redirect ke home
+            if (str_contains($request->path(), 'logout')) {
+                return redirect('/?logout=1');
+            }
+
+            return $response;
+        });
     })->create();

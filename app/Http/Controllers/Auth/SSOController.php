@@ -327,42 +327,51 @@ class SSOController extends Controller
      */
     public function logout(Request $request)
     {
-        $user = Auth::user();
-
-        if ($user) {
-            Log::info('User Logout', [
-                'user_uuid' => $user->UUID,
-                'username' => $user->usn,
-                'ip' => $request->ip(),
-            ]);
-        }
-
-        // Logout dari Laravel Auth terlebih dahulu
-        Auth::logout();
-
-        // Session operations dibungkus try-catch agar redirect SELALU terjadi
-        // meskipun ada masalah database session (timeout, lock, dsb.)
         try {
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            $user = Auth::user();
+
+            if ($user) {
+                Log::info('User Logout', [
+                    'user_uuid' => $user->UUID,
+                    'username' => $user->usn,
+                    'ip' => $request->ip(),
+                ]);
+            }
+
+            // Logout dari Laravel Auth
+            Auth::logout();
+
+            // Session cleanup - dibungkus try-catch individual
+            try {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            } catch (\Exception $e) {
+                Log::warning('Logout session cleanup failed', [
+                    'error' => $e->getMessage(),
+                    'ip' => $request->ip(),
+                ]);
+                try {
+                    $request->session()->flush();
+                } catch (\Exception $e2) {
+                    // Session sudah tidak bisa di-cleanup, lanjut redirect saja
+                    Log::error('Logout session flush also failed', [
+                        'error' => $e2->getMessage(),
+                    ]);
+                }
+            }
         } catch (\Exception $e) {
-            Log::warning('Logout session cleanup failed, forcing flush', [
+            // Bahkan jika Auth::logout() atau apapun gagal total,
+            // kita TETAP harus redirect user ke home
+            Log::error('Logout completely failed', [
                 'error' => $e->getMessage(),
                 'ip' => $request->ip(),
             ]);
-
-            // Fallback: flush session data langsung
-            try {
-                $request->session()->flush();
-            } catch (\Exception $e2) {
-                Log::error('Logout session flush also failed', [
-                    'error' => $e2->getMessage(),
-                ]);
-            }
         }
 
-        return redirect()->route('home')
-            ->with('success', 'Anda telah keluar dari aplikasi.');
+        // PENTING: Tidak pakai ->with() karena itu menulis ke session.
+        // Jika session DB bermasalah, ->with() akan throw exception
+        // dan menghasilkan layar putih. Gunakan query parameter saja.
+        return redirect('/?logout=1');
     }
 
     /**

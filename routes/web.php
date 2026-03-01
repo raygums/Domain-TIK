@@ -44,7 +44,7 @@ Route::get('/force-logout', function() {
             'error' => $e->getMessage(),
         ]);
     }
-    return redirect()->route('home')->with('success', 'Session cleared successfully.');
+    return redirect('/?logout=1');
 })->name('force.logout');
 
 
@@ -65,13 +65,18 @@ Route::middleware('guest')->group(function () {
 
 
 // ==========================================
+// LOGOUT ROUTE (Diluar auth middleware agar selalu bisa diakses)
+// ==========================================
+// GET logout tidak memerlukan CSRF token dan tidak butuh auth middleware.
+// Ini mencegah layar putih ketika session/CSRF sudah expired.
+Route::get('/logout', [SSOController::class, 'logout'])->name('logout.get');
+Route::post('/logout', [SSOController::class, 'logout'])->name('logout');
+
+
+// ==========================================
 // AUTHENTICATED ROUTES (Harus login dulu)
 // ==========================================
 Route::middleware('auth')->group(function () {
-    
-    // --- Authentication ---
-    Route::post('/logout', [SSOController::class, 'logout'])->name('logout');
-    Route::get('/logout', [SSOController::class, 'logout'])->name('logout.get'); // Fallback GET method
 
     // --- Dashboard (setelah login, redirect berdasarkan role) ---
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
