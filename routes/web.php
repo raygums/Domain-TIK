@@ -36,8 +36,14 @@ Route::get('/auth/sso/callback', [SSOController::class, 'handleCallback'])->name
 // Emergency force logout (jika session bermasalah)
 Route::get('/force-logout', function() {
     Auth::logout();
-    request()->session()->flush();
-    request()->session()->invalidate();
+    try {
+        request()->session()->flush();
+        request()->session()->invalidate();
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::warning('Force logout session cleanup failed', [
+            'error' => $e->getMessage(),
+        ]);
+    }
     return redirect()->route('home')->with('success', 'Session cleared successfully.');
 })->name('force.logout');
 

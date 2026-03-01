@@ -337,9 +337,29 @@ class SSOController extends Controller
             ]);
         }
 
+        // Logout dari Laravel Auth terlebih dahulu
         Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+
+        // Session operations dibungkus try-catch agar redirect SELALU terjadi
+        // meskipun ada masalah database session (timeout, lock, dsb.)
+        try {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        } catch (\Exception $e) {
+            Log::warning('Logout session cleanup failed, forcing flush', [
+                'error' => $e->getMessage(),
+                'ip' => $request->ip(),
+            ]);
+
+            // Fallback: flush session data langsung
+            try {
+                $request->session()->flush();
+            } catch (\Exception $e2) {
+                Log::error('Logout session flush also failed', [
+                    'error' => $e2->getMessage(),
+                ]);
+            }
+        }
 
         return redirect()->route('home')
             ->with('success', 'Anda telah keluar dari aplikasi.');
