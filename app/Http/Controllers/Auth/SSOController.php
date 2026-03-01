@@ -328,59 +328,21 @@ class SSOController extends Controller
     public function logout(Request $request)
     {
         $user = Auth::user();
-        $userInfo = null;
-        
+
         if ($user) {
-            $userInfo = [
+            Log::info('User Logout', [
                 'user_uuid' => $user->UUID,
                 'username' => $user->usn,
                 'ip' => $request->ip(),
-            ];
-            Log::info('User Logout Initiated', $userInfo);
-        }
-
-        try {
-            // Step 1: Logout dari Auth (remove user from auth)
-            Auth::logout();
-            Log::info('Auth logout successful', $userInfo ?? []);
-            
-            // Step 2: Flush session data (quick, in-memory)
-            session()->flush();
-            Log::info('Session flushed', $userInfo ?? []);
-            
-            // Step 3: Invalidate & regenerate (with timeout protection)
-            try {
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                Log::info('Session invalidated & token regenerated', $userInfo ?? []);
-            } catch (\Exception $sessionError) {
-                // Database timeout pada invalidate() - non-critical
-                // User sudah ter-logout dari step 1 & 2
-                Log::warning('Session invalidation failed (database timeout, but user already logged out)', [
-                    'error' => $sessionError->getMessage(),
-                    'user_info' => $userInfo,
-                ]);
-            }
-
-            Log::info('User Logout Complete', $userInfo ?? []);
-
-            // Redirect dengan message
-            return redirect()->route('home')
-                ->with('success', 'Anda telah keluar dari aplikasi.');
-                
-        } catch (\Exception $e) {
-            // Jika ada error apapun, tetap redirect ke home
-            Log::error('Logout Error (forced redirect to ensure user is logged out)', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_info' => $userInfo,
             ]);
-            
-            // Force redirect meskipun ada error
-            // User tetap ter-logout karena Auth::logout() sudah dipanggil
-            return redirect()->route('home')
-                ->with('info', 'Anda telah keluar dari aplikasi.');
         }
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home')
+            ->with('success', 'Anda telah keluar dari aplikasi.');
     }
 
     /**
