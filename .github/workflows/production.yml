@@ -10,11 +10,9 @@ jobs:
     name: Continuous Integration
     runs-on: ubuntu-latest
     steps:
-      # Langkah 1: Mengambil snapshot kode terbaru dari branch production
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # Langkah 2: Menyiapkan arsitektur PHP yang identik dengan server
       - name: Setup PHP Environment
         uses: shivammathur/setup-php@v2
         with:
@@ -22,17 +20,26 @@ jobs:
           extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, bcmath
           coverage: none
 
-      # Langkah 3: Menginstal dependensi PHP secara ringkas dan optimal
+      # --- PERBAIKAN 1: Menyiapkan Lingkungan Node.js & Membangun Aset Vite ---
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Menggunakan versi LTS stabil
+
+      - name: Install Dependencies & Build Vite Assets
+        run: |
+          npm ci
+          npm run build
+      # ------------------------------------------------------------------------
+
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
-      # Langkah 4: Menyiapkan variabel environment virtual untuk kebutuhan pengujian
       - name: Prepare Test Environment
         run: |
           cp .env.example .env
           php artisan key:generate
 
-      # Langkah 5: Memastikan integritas kode dengan menjalankan automated testing
       - name: Run PHPUnit Tests
         run: php artisan test
 
@@ -41,7 +48,6 @@ jobs:
     needs: ci-testing
     runs-on: ubuntu-latest
     steps:
-      # Langkah 6: Membuat terowongan aman ke VPS dan mengeksekusi script pembaruan
       - name: Execute Deployment Script via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -51,18 +57,21 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             cd /var/www/SiDevTIK
+            
+            # 1. Selaraskan repository GitHub ke VPS Host
             git fetch origin production
-            git checkout production
-            git pull origin production
+            git reset --hard origin/production
             
-            # Memperbarui dependensi jika ada package baru
-            composer install --no-interaction --prefer-dist --optimize-autoloader
+            # --- PERBAIKAN 2: Eksekusi perintah di DALAM Docker Container ---
             
-            # Membersihkan cache lama agar konfigurasi baru terbaca
-            php artisan optimize:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
+            # 2. Update dependensi PHP via container
+            docker exec si-project-tik-app composer install --no-interaction --prefer-dist --optimize-autoloader
             
-            # Menjalankan migrasi database dengan mode force (tanpa konfirmasi manual)
-            php artisan migrate --force
+            # 3. Reset Cache Laravel via container
+            docker exec si-project-tik-app php artisan optimize:clear
+            docker exec si-project-tik-app php artisan config:cache
+            docker exec si-project-tik-app php artisan route:cache
+            docker exec si-project-tik-app php artisan view:cache
+            
+            # 4. Jalankan Migrasi Database via container
+            docker exec si-project-tik-app php artisan migrate --force
