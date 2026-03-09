@@ -1,0 +1,68 @@
+name: Production CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  ci-testing:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    steps:
+      # Langkah 1: Mengambil snapshot kode terbaru dari branch production
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # Langkah 2: Menyiapkan arsitektur PHP yang identik dengan server
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, bcmath
+          coverage: none
+
+      # Langkah 3: Menginstal dependensi PHP secara ringkas dan optimal
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      # Langkah 4: Menyiapkan variabel environment virtual untuk kebutuhan pengujian
+      - name: Prepare Test Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # Langkah 5: Memastikan integritas kode dengan menjalankan automated testing
+      - name: Run PHPUnit Tests
+        run: php artisan test
+
+  cd-deployment:
+    name: Continuous Deployment
+    needs: ci-testing
+    runs-on: ubuntu-latest
+    steps:
+      # Langkah 6: Membuat terowongan aman ke VPS dan mengeksekusi script pembaruan
+      - name: Execute Deployment Script via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd /var/www/SiDevTIK
+            git fetch origin production
+            git checkout production
+            git pull origin production
+            
+            # Memperbarui dependensi jika ada package baru
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+            
+            # Membersihkan cache lama agar konfigurasi baru terbaca
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            # Menjalankan migrasi database dengan mode force (tanpa konfirmasi manual)
+            php artisan migrate --force
