@@ -104,12 +104,21 @@ class VerificationController extends Controller
         try {
             DB::beginTransaction();
 
+            // Validate current status allows approval
+            $allowedStatuses = ['Diajukan', 'Menunggu Verifikasi'];
+            if (!in_array($submission->status?->nm_status, $allowedStatuses, true)) {
+                return back()->with('error', 'Pengajuan ini tidak dalam status yang dapat diverifikasi.');
+            }
+
             // Cari status "Disetujui Verifikator"
             $newStatus = StatusPengajuan::where('nm_status', 'Disetujui Verifikator')->first();
             
             if (!$newStatus) {
                 throw new \Exception('Status "Disetujui Verifikator" tidak ditemukan di database.');
             }
+
+            // Capture old status before update
+            $oldStatusUuid = $submission->status_uuid;
 
             // Update status pengajuan
             $submission->update([
@@ -120,6 +129,7 @@ class VerificationController extends Controller
             // Buat log
             SubmissionLog::create([
                 'pengajuan_uuid' => $submission->UUID,
+                'status_lama_uuid' => $oldStatusUuid,
                 'status_baru_uuid' => $newStatus->UUID,
                 'catatan_log' => $request->input('catatan', 'Pengajuan disetujui oleh Verifikator.'),
                 'id_creator' => Auth::id(),
@@ -133,7 +143,9 @@ class VerificationController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', config('app.debug')
+                ? 'Terjadi kesalahan (approve): ' . $e->getMessage()
+                : 'Terjadi kesalahan. Silakan coba lagi atau hubungi administrator.');
         }
     }
 
@@ -152,12 +164,21 @@ class VerificationController extends Controller
         try {
             DB::beginTransaction();
 
+            // Validate current status allows rejection
+            $allowedStatuses = ['Diajukan', 'Menunggu Verifikasi'];
+            if (!in_array($submission->status?->nm_status, $allowedStatuses, true)) {
+                return back()->with('error', 'Pengajuan ini tidak dalam status yang dapat ditolak.');
+            }
+
             // Cari status "Ditolak Verifikator"
             $newStatus = StatusPengajuan::where('nm_status', 'Ditolak Verifikator')->first();
             
             if (!$newStatus) {
                 throw new \Exception('Status "Ditolak Verifikator" tidak ditemukan di database.');
             }
+
+            // Capture old status before update
+            $oldStatusUuid = $submission->status_uuid;
 
             // Update status pengajuan
             $submission->update([
@@ -168,6 +189,7 @@ class VerificationController extends Controller
             // Buat log dengan alasan penolakan
             SubmissionLog::create([
                 'pengajuan_uuid' => $submission->UUID,
+                'status_lama_uuid' => $oldStatusUuid,
                 'status_baru_uuid' => $newStatus->UUID,
                 'catatan_log' => 'DITOLAK: ' . $request->input('alasan_penolakan'),
                 'id_creator' => Auth::id(),
@@ -181,7 +203,9 @@ class VerificationController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', config('app.debug')
+                ? 'Terjadi kesalahan (reject): ' . $e->getMessage()
+                : 'Terjadi kesalahan. Silakan coba lagi atau hubungi administrator.');
         }
     }
 
@@ -208,9 +232,11 @@ class VerificationController extends Controller
         $statusIds = collect([$approvedStatus?->UUID, $rejectedStatus?->UUID])->filter();
 
         $query = Submission::with(['pengguna', 'unitKerja', 'jenisLayanan', 'status', 'rincian', 'updater.peran'])
-            ->whereIn('status_uuid', $statusIds)
-            ->orWhereHas('riwayat', function($q) use ($statusIds) {
-                $q->whereIn('status_baru_uuid', $statusIds);
+            ->where(function($q) use ($statusIds) {
+                $q->whereIn('status_uuid', $statusIds)
+                  ->orWhereHas('riwayat', function($q) use ($statusIds) {
+                      $q->whereIn('status_baru_uuid', $statusIds);
+                  });
             });
 
         // Apply search filter
@@ -268,9 +294,12 @@ class VerificationController extends Controller
         $statusIds = collect([$approvedStatus?->UUID, $rejectedStatus?->UUID])->filter();
 
         // Get submissions yang diverifikasi oleh user yang login
+        // Menggunakan riwayat log (bukan id_updater) agar tidak hilang saat eksekutor memproses
         $query = Submission::with(['pengguna', 'unitKerja', 'jenisLayanan', 'status', 'rincian', 'updater'])
-            ->where('id_updater', Auth::id())
-            ->whereIn('status_uuid', $statusIds);
+            ->whereHas('riwayat', function($q) use ($statusIds) {
+                $q->where('id_creator', Auth::id())
+                  ->whereIn('status_baru_uuid', $statusIds);
+            });
 
         // Apply search filter
         if ($filters['search']) {

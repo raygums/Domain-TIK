@@ -12,6 +12,7 @@ use App\Models\UnitCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class SubmissionController extends Controller
@@ -265,7 +266,9 @@ class SubmissionController extends Controller
             DB::rollBack();
             return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+                ->with('error', config('app.debug')
+                    ? 'Terjadi kesalahan: ' . $e->getMessage()
+                    : 'Terjadi kesalahan. Silakan coba lagi atau hubungi administrator.');
         }
     }
 
@@ -366,6 +369,39 @@ class SubmissionController extends Controller
     }
 
     /**
+     * Serve private uploaded file with authorization check.
+     * File disimpan di private disk (bukan public), tidak bisa diakses via URL langsung.
+     * Hanya owner pengajuan, admin, verifikator, dan eksekutor yang boleh akses.
+     */
+    public function serveFile(Submission $submission, string $type)
+    {
+        $this->authorizeAccess($submission);
+
+        $detail = $submission->rincian;
+
+        if (!$detail || !$detail->file_lampiran) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        $files = is_array($detail->file_lampiran)
+            ? $detail->file_lampiran
+            : json_decode($detail->file_lampiran, true);
+
+        $allowedTypes = ['signed_form', 'identity'];
+        if (!in_array($type, $allowedTypes, true)) {
+            abort(404, 'Tipe file tidak valid.');
+        }
+
+        $path = $files[$type] ?? null;
+
+        if (!$path || !Storage::disk('local')->exists($path)) {
+            abort(404, 'File tidak ditemukan di server.');
+        }
+
+        return Storage::disk('local')->response($path);
+    }
+
+    /**
      * Store uploaded signed form
      */
     public function storeUpload(Request $request, Submission $submission)
@@ -382,14 +418,16 @@ class SubmissionController extends Controller
         ]);
 
         try {
+            DB::beginTransaction();
+
             $user = Auth::user();
             
-            // Store files
+            // Store files di private disk (bukan public) agar tidak bisa diakses langsung via URL
             $signedFormPath = $request->file('signed_form')
-                ->store("submissions/{$submission->UUID}", 'public');
+                ->store("submissions/{$submission->UUID}", 'local');
             
             $identityPath = $request->file('identity_attachment')
-                ->store("submissions/{$submission->UUID}", 'public');
+                ->store("submissions/{$submission->UUID}", 'local');
 
             // Get or create submitted status
             $statusDiajukan = StatusPengajuan::firstOrCreate(
@@ -422,12 +460,17 @@ class SubmissionController extends Controller
                 'id_creator' => $user->UUID,
             ]);
 
+            DB::commit();
+
             return redirect()
                 ->route('submissions.show', $submission)
                 ->with('success', 'Pengajuan berhasil dikirim! Tim TIK akan memverifikasi dokumen Anda.');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan saat upload: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', config('app.debug')
+                    ? 'Terjadi kesalahan saat upload: ' . $e->getMessage()
+                    : 'Terjadi kesalahan saat upload. Silakan coba lagi atau hubungi administrator.');
         }
     }
 
@@ -504,6 +547,8 @@ class SubmissionController extends Controller
         }
 
         try {
+            DB::beginTransaction();
+
             $user = Auth::user();
             
             // Get or create submitted status
@@ -528,12 +573,17 @@ class SubmissionController extends Controller
                 'id_creator' => $user->UUID,
             ]);
 
+            DB::commit();
+
             return redirect()
                 ->route('submissions.index')
                 ->with('success', 'Pengajuan berhasil dikirim ke Verifikator!');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', config('app.debug')
+                ? 'Terjadi kesalahan: ' . $e->getMessage()
+                : 'Terjadi kesalahan. Silakan coba lagi atau hubungi administrator.');
         }
     }
 
@@ -551,10 +601,12 @@ class SubmissionController extends Controller
             ]);
         }
 
-        // Check if domain already exists in submissions
-        $exists = SubmissionDetail::where('nm_domain', 'ILIKE', $domain . '%')
-            ->orWhere('nm_domain', 'ILIKE', $domain . '.unila.ac.id')
-            ->exists();
+        // Check if domain already exists in submissions (exact match, with or without .unila.ac.id)
+        $fullDomain = $domain . '.unila.ac.id';
+        $exists = SubmissionDetail::where(function($q) use ($domain, $fullDomain) {
+            $q->where('nm_domain', 'ILIKE', $fullDomain)
+              ->orWhere('nm_domain', 'ILIKE', $domain);
+        })->exists();
 
         return response()->json([
             'available' => !$exists,

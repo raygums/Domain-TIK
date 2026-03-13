@@ -238,6 +238,9 @@ class AdminService
     public function getUsersNeverLoggedIn(int $perPage = 15): LengthAwarePaginator
     {
         return User::with('peran')
+            ->whereHas('peran', function($q) {
+                $q->where('nm_peran', 'Pengguna');
+            })
             ->whereNull('last_login_at')
             ->orderBy('create_at', 'desc')
             ->paginate($perPage);
@@ -253,6 +256,9 @@ class AdminService
     public function searchUsers(string $keyword, int $perPage = 15): LengthAwarePaginator
     {
         return User::with('peran')
+            ->whereHas('peran', function($q) {
+                $q->where('nm_peran', 'Pengguna');
+            })
             ->where(function (Builder $q) use ($keyword) {
                 $q->where('nm', 'ILIKE', "%{$keyword}%")
                   ->orWhere('usn', 'ILIKE', "%{$keyword}%")

@@ -17,7 +17,7 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $roleName = strtolower($user->peran->nm_peran ?? 'pengguna');
+        $roleName = strtolower($user->peran?->nm_peran ?? 'pengguna');
 
         // Pimpinan (Super Admin) mendapat dashboard tersendiri
         if (str_contains($roleName, 'pimpinan')) {

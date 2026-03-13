@@ -122,12 +122,21 @@ class ExecutionController extends Controller
         try {
             DB::beginTransaction();
 
+            // Validate current status allows acceptance
+            $allowedStatuses = ['Disetujui Verifikator', 'Menunggu Eksekusi'];
+            if (!in_array($submission->status?->nm_status, $allowedStatuses, true)) {
+                return back()->with('error', 'Pengajuan ini tidak dalam status yang dapat diterima.');
+            }
+
             // Cari status "Sedang Dikerjakan"
             $newStatus = StatusPengajuan::where('nm_status', 'Sedang Dikerjakan')->first();
             
             if (!$newStatus) {
                 throw new \Exception('Status "Sedang Dikerjakan" tidak ditemukan di database.');
             }
+
+            // Capture old status before update
+            $oldStatusUuid = $submission->status_uuid;
 
             // Update status pengajuan
             $submission->update([
@@ -138,6 +147,7 @@ class ExecutionController extends Controller
             // Buat log
             SubmissionLog::create([
                 'pengajuan_uuid' => $submission->UUID,
+                'status_lama_uuid' => $oldStatusUuid,
                 'status_baru_uuid' => $newStatus->UUID,
                 'catatan_log' => $request->input('catatan', 'Pengajuan diterima dan sedang dikerjakan oleh Eksekutor.'),
                 'id_creator' => Auth::id(),
@@ -151,7 +161,9 @@ class ExecutionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', config('app.debug')
+                ? 'Terjadi kesalahan (accept): ' . $e->getMessage()
+                : 'Terjadi kesalahan. Silakan coba lagi atau hubungi administrator.');
         }
     }
 
@@ -168,12 +180,20 @@ class ExecutionController extends Controller
         try {
             DB::beginTransaction();
 
+            // Validate current status allows completion
+            if ($submission->status?->nm_status !== 'Sedang Dikerjakan') {
+                return back()->with('error', 'Pengajuan ini tidak dalam status yang dapat diselesaikan.');
+            }
+
             // Cari status "Selesai"
             $newStatus = StatusPengajuan::where('nm_status', 'Selesai')->first();
             
             if (!$newStatus) {
                 throw new \Exception('Status "Selesai" tidak ditemukan di database.');
             }
+
+            // Capture old status before update
+            $oldStatusUuid = $submission->status_uuid;
 
             // Update status pengajuan
             $submission->update([
@@ -192,6 +212,7 @@ class ExecutionController extends Controller
 
             SubmissionLog::create([
                 'pengajuan_uuid' => $submission->UUID,
+                'status_lama_uuid' => $oldStatusUuid,
                 'status_baru_uuid' => $newStatus->UUID,
                 'catatan_log' => $logMessage,
                 'id_creator' => Auth::id(),
@@ -205,7 +226,9 @@ class ExecutionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', config('app.debug')
+                ? 'Terjadi kesalahan (complete): ' . $e->getMessage()
+                : 'Terjadi kesalahan. Silakan coba lagi atau hubungi administrator.');
         }
     }
 
@@ -224,12 +247,21 @@ class ExecutionController extends Controller
         try {
             DB::beginTransaction();
 
+            // Validate current status allows rejection
+            $allowedStatuses = ['Disetujui Verifikator', 'Menunggu Eksekusi', 'Sedang Dikerjakan'];
+            if (!in_array($submission->status?->nm_status, $allowedStatuses, true)) {
+                return back()->with('error', 'Pengajuan ini tidak dalam status yang dapat ditolak.');
+            }
+
             // Cari status "Ditolak Eksekutor"
             $newStatus = StatusPengajuan::where('nm_status', 'Ditolak Eksekutor')->first();
             
             if (!$newStatus) {
                 throw new \Exception('Status "Ditolak Eksekutor" tidak ditemukan di database.');
             }
+
+            // Capture old status before update
+            $oldStatusUuid = $submission->status_uuid;
 
             // Update status pengajuan
             $submission->update([
@@ -240,6 +272,7 @@ class ExecutionController extends Controller
             // Buat log dengan alasan/kendala
             SubmissionLog::create([
                 'pengajuan_uuid' => $submission->UUID,
+                'status_lama_uuid' => $oldStatusUuid,
                 'status_baru_uuid' => $newStatus->UUID,
                 'catatan_log' => 'DITOLAK EKSEKUTOR - Kendala: ' . $request->input('alasan_penolakan'),
                 'id_creator' => Auth::id(),
@@ -253,7 +286,9 @@ class ExecutionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', config('app.debug')
+                ? 'Terjadi kesalahan (reject): ' . $e->getMessage()
+                : 'Terjadi kesalahan. Silakan coba lagi atau hubungi administrator.');
         }
     }
 
