@@ -111,9 +111,12 @@ Route::middleware('auth')->group(function () {
         
         // User Verification & Management
         Route::get('/users/verification', [\App\Http\Controllers\Admin\AdminController::class, 'userVerification'])->name('users.verification');
+        Route::post('/users/create', [\App\Http\Controllers\Admin\AdminController::class, 'createUser'])->name('users.create');
         Route::post('/users/{uuid}/toggle-status', [\App\Http\Controllers\Admin\AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
+        Route::post('/users/{uuid}/change-role', [\App\Http\Controllers\Admin\AdminController::class, 'changeUserRole'])->name('users.change-role');
         Route::post('/users/bulk-activate', [\App\Http\Controllers\Admin\AdminController::class, 'bulkActivate'])->name('users.bulk-activate');
         Route::get('/users/never-logged-in', [\App\Http\Controllers\Admin\AdminController::class, 'usersNeverLoggedIn'])->name('users.never-logged-in');
+        Route::post('/units/sync', [\App\Http\Controllers\Admin\AdminController::class, 'syncUnits'])->name('units.sync');
         
         // Audit Logs (Activity: Login & Submission)
         Route::get('/audit/aktivitas', [\App\Http\Controllers\Admin\AuditLogController::class, 'loginLogs'])->name('audit.aktivitas');

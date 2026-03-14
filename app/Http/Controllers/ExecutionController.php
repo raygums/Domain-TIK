@@ -18,8 +18,11 @@ class ExecutionController extends Controller
      */
     public function index(Request $request): View
     {
+        $scope = $request->get('scope', 'pending');
+
         // Get filters from request
         $filters = [
+            'scope' => $scope,
             'search' => $request->get('search'),
             'layanan' => $request->get('layanan', 'all'),
             'tanggal_dari' => $request->get('tanggal_dari'),
@@ -30,14 +33,60 @@ class ExecutionController extends Controller
         $perPage = (int) $request->get('per_page', 20);
         $perPage = in_array($perPage, [10, 20, 50, 100]) ? $perPage : 20;
 
-        // Ambil status yang sudah disetujui verifikator
+        // Status utama eksekutor
         $pendingStatuses = StatusPengajuan::whereIn('nm_status', [
             'Disetujui Verifikator', 
             'Menunggu Eksekusi'
         ])->pluck('UUID');
+        $inProgressStatus = StatusPengajuan::where('nm_status', 'Sedang Dikerjakan')->first();
+        $completedStatus = StatusPengajuan::where('nm_status', 'Selesai')->first();
+        $rejectedStatus = StatusPengajuan::where('nm_status', 'Ditolak Eksekutor')->first();
 
-        $query = Submission::with(['pengguna', 'unitKerja', 'jenisLayanan', 'status', 'rincian'])
-            ->whereIn('status_uuid', $pendingStatuses);
+        $query = Submission::with(['pengguna', 'unitKerja', 'jenisLayanan', 'status', 'rincian']);
+
+        $pageTitle = 'Daftar Tugas';
+        $pageDescription = 'Pengajuan yang sudah disetujui verifikator dan siap dikerjakan.';
+
+        switch ($scope) {
+            case 'in_progress':
+                if ($inProgressStatus) {
+                    $query->where('status_uuid', $inProgressStatus->UUID);
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+                $pageTitle = 'Sedang Dikerjakan';
+                $pageDescription = 'Daftar pengajuan yang sedang dikerjakan oleh tim eksekutor.';
+                break;
+
+            case 'completed_today':
+                if ($completedStatus) {
+                    $query->where('status_uuid', $completedStatus->UUID)
+                        ->whereDate('last_update', today());
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+                $pageTitle = 'Selesai Hari Ini';
+                $pageDescription = 'Daftar pengajuan yang selesai dikerjakan hari ini.';
+                break;
+
+            case 'rejected_today':
+                if ($rejectedStatus) {
+                    $query->where('status_uuid', $rejectedStatus->UUID)
+                        ->whereDate('last_update', today());
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+                $pageTitle = 'Ditolak Hari Ini';
+                $pageDescription = 'Daftar pengajuan yang ditolak oleh eksekutor hari ini.';
+                break;
+
+            case 'pending':
+            default:
+                $query->whereIn('status_uuid', $pendingStatuses);
+                $pageTitle = 'Daftar Tugas';
+                $pageDescription = 'Pengajuan yang sudah disetujui verifikator dan siap dikerjakan.';
+                break;
+        }
 
         // Apply search filter
         if ($filters['search']) {
@@ -72,7 +121,6 @@ class ExecutionController extends Controller
             ->appends($request->except('page'));
 
         // Statistik
-        $inProgressStatus = StatusPengajuan::where('nm_status', 'Sedang Dikerjakan')->first();
         $inProgressCount = 0;
         if ($inProgressStatus) {
             $inProgressCount = Submission::where('status_uuid', $inProgressStatus->UUID)->count();
@@ -85,7 +133,7 @@ class ExecutionController extends Controller
             'rejected_today' => $this->getRejectedTodayCount(),
         ];
 
-        return view('eksekutor.index', compact('submissions', 'stats', 'filters'));
+        return view('eksekutor.index', compact('submissions', 'stats', 'filters', 'pageTitle', 'pageDescription'));
     }
 
     /**
@@ -106,8 +154,17 @@ class ExecutionController extends Controller
         
         // Get all logs for timeline in sidebar
         $logs = $submission->riwayat()->with(['statusBaru', 'creator'])->orderBy('create_at', 'desc')->get();
+
+        // Latest execution action untuk transparansi siapa yang mengerjakan
+        $executionLog = SubmissionLog::with(['creator.peran', 'statusBaru'])
+            ->where('pengajuan_uuid', $submission->UUID)
+            ->whereHas('statusBaru', function ($q) {
+                $q->whereIn('nm_status', ['Sedang Dikerjakan', 'Selesai', 'Ditolak Eksekutor']);
+            })
+            ->latest('create_at')
+            ->first();
         
-        return view('eksekutor.show', compact('submission', 'verificationLog', 'logs'));
+        return view('eksekutor.show', compact('submission', 'verificationLog', 'executionLog', 'logs'));
     }
 
     /**
