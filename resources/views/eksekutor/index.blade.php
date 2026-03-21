@@ -77,12 +77,13 @@
                 </div>
             </div>
         </a>
+    </div>
 
-        {{-- Filters & Search --}}
-        <div class="mb-6 rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div class="p-6">
-                <form method="GET" action="{{ route('eksekutor.index') }}" id="filterForm">
-                    <input type="hidden" name="scope" value="{{ $filters['scope'] ?? 'pending' }}">
+    {{-- Filters & Search --}}
+    <div class="mb-6 rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div class="p-6">
+            <form method="GET" action="{{ route('eksekutor.index') }}" id="filterForm">
+                <input type="hidden" name="scope" value="{{ $filters['scope'] ?? 'pending' }}">
                     
                     <div class="flex flex-col gap-3 sm:flex-row">
                         {{-- Search Input --}}
@@ -296,7 +297,6 @@
                 </div>
             </div>
         </div>
-
-    </div>
+        
 </div>
 @endsection
