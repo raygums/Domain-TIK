@@ -273,9 +273,34 @@
         </div>
 
         {{-- Pagination --}}
-        @if($users->hasPages())
+        @if($users->hasPages() || $users->total() > 10)
         <div class="border-t border-gray-200 bg-gray-50 px-6 py-4">
-            {{ $users->links() }}
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                {{-- Items Per Page Selector --}}
+                <form method="GET" action="{{ route('pimpinan.users') }}" id="perPageForm" class="flex items-center gap-2">
+                    {{-- Preserve all existing query params --}}
+                    @foreach(request()->except(['per_page', 'page']) as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    
+                    <label for="per_page_users" class="text-sm text-gray-700">Tampilkan:</label>
+                    <select name="per_page" 
+                            id="per_page_users"
+                            onchange="this.form.submit()"
+                            class="rounded-md border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-myunila focus:ring-myunila">
+                        <option value="10" {{ (int)request('per_page', 20) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ (int)request('per_page', 20) == 20 ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ (int)request('per_page', 20) == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ (int)request('per_page', 20) == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                    <span class="text-sm text-gray-700">per halaman</span>
+                </form>
+
+                {{-- Pagination Links --}}
+                <div class="flex-1 flex justify-end">
+                    {{ $users->appends(request()->query())->links() }}
+                </div>
+            </div>
         </div>
         @endif
     </div>
