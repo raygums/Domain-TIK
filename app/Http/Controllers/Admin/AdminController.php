@@ -130,7 +130,7 @@ class AdminController extends Controller
     public function changeUserRole(Request $request, string $uuid): RedirectResponse
     {
         $request->validate([
-            'role_uuid' => 'required|exists:akun.peran,UUID',
+            'role_uuid' => ['required', Rule::exists(\App\Models\Peran::class, 'UUID')],
         ]);
 
         $result = $this->adminService->changeUserRole($uuid, $request->input('role_uuid'));
@@ -150,16 +150,16 @@ class AdminController extends Controller
                 'string',
                 'max:100',
                 'regex:/^[a-z0-9._]+$/',
-                Rule::unique('akun.pengguna', 'usn'),
+                Rule::unique(\App\Models\User::class, 'usn'),
             ],
             'email' => [
                 'required',
                 'email:rfc,dns',
                 'max:125',
-                Rule::unique('akun.pengguna', 'email'),
+                Rule::unique(\App\Models\User::class, 'email'),
             ],
             'kata_sandi' => 'required|string|min:8|max:100',
-            'peran_uuid' => 'required|exists:akun.peran,UUID',
+            'peran_uuid' => ['required', Rule::exists(\App\Models\Peran::class, 'UUID')],
             'a_aktif' => 'nullable|boolean',
         ], [
             'usn.regex' => 'Username hanya boleh huruf kecil, angka, titik, dan underscore.',
