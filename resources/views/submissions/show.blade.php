@@ -405,7 +405,7 @@
                                         <div class="flex-1">
                                             <p class="font-medium text-gray-900">Formulir Bertanda Tangan</p>
                                             @if(!empty($fileLampiran['signed_form']))
-                                                <a href="{{ asset('storage/' . $fileLampiran['signed_form']) }}" target="_blank" class="text-sm text-myunila hover:underline inline-flex items-center gap-1">
+                                                <a href="{{ route('submissions.file', ['submission' => $submission->UUID, 'type' => 'signed_form']) }}" target="_blank" class="text-sm text-myunila hover:underline inline-flex items-center gap-1">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                     </svg>
@@ -429,7 +429,7 @@
                                         <div class="flex-1">
                                             <p class="font-medium text-gray-900">Identitas (KTM/Karpeg)</p>
                                             @if(!empty($fileLampiran['identity']))
-                                                <a href="{{ asset('storage/' . $fileLampiran['identity']) }}" target="_blank" class="text-sm text-myunila hover:underline inline-flex items-center gap-1">
+                                                <a href="{{ route('submissions.file', ['submission' => $submission->UUID, 'type' => 'identity']) }}" target="_blank" class="text-sm text-myunila hover:underline inline-flex items-center gap-1">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                     </svg>
